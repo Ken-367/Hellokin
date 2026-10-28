@@ -310,10 +310,15 @@ window.hkChat = {
   }
 };
 
-// Show the sign-in screen automatically after the page finishes loading.
-window.addEventListener('load', () => {
+// Show the sign-in screen after the app loads.
+function autoOpenSignIn() {
   if (dlg && !dlg.open) {
     dlg.showModal();
     show();
   }
-}, { once: true });
+}
+if (document.readyState === 'complete') {
+  autoOpenSignIn();
+} else {
+  window.addEventListener('load', autoOpenSignIn, { once: true });
+}
