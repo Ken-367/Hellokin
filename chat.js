@@ -309,3 +309,11 @@ window.hkChat = {
       '<button type="button" class="main" data-a="saveuname">Save username</button>');
   }
 };
+
+// Show the sign-in screen automatically after the page finishes loading.
+window.addEventListener('load', () => {
+  if (dlg && !dlg.open) {
+    dlg.showModal();
+    show();
+  }
+}, { once: true });
