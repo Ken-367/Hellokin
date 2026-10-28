@@ -1,6 +1,6 @@
 // Hellokin service worker: network first, so new deploys show up right away.
 // Cached copies are only used when you are offline.
-const CACHE = 'hellokin-v2';
+const CACHE = 'hellokin-v3';
 const FILES = ['./', './index.html', './chat.js', './firebase-config.js', './manifest.json'];
 
 self.addEventListener('install', e => {
