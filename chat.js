@@ -310,15 +310,4 @@ window.hkChat = {
   }
 };
 
-// Show the sign-in screen after the app loads.
-function autoOpenSignIn() {
-  if (dlg && !dlg.open) {
-    dlg.showModal();
-    show();
-  }
-}
-if (document.readyState === 'complete') {
-  autoOpenSignIn();
-} else {
-  window.addEventListener('load', autoOpenSignIn, { once: true });
-}
+// Chat opens only when the user taps the Chat button.
