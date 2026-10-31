@@ -238,9 +238,17 @@ nav button {
   #hkSplash .hk-spinner { animation-duration: 2s; }
 }
 
+
+/* Keep login and loading screens separate from the app */
+[hidden] {
+  display: none !important;
+}
 </style>
 </head>
+
 <body>
+<div id="hkWelcome" hidden style="min-height:100vh;padding:20px 14px;background:var(--bg,#eef2f6);"></div>
+
 
 <div id="hkSplash" role="status" aria-label="Loading Hellokin">
   <div class="hk-logo">Hellokin</div>
@@ -662,6 +670,7 @@ nav button {
   window.scrollTo(0, 0);
 }
 
+ window.showScreen = showScreen;
  showScreen('home');
 </script>
 
@@ -686,6 +695,7 @@ nav button {
 })();
 </script>
 
+<script type="module" src="./welcome-auth.js"></script>
 </body>
 </html>
 

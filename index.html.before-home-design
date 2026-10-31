@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14213d">
+  <meta name="description" content="Hellokin — connect, chat, and share with friends.">
+  <title>Hellokin</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --blue: #1877f2;
+      --navy: #14213d;
+      --bg: #eef2f6;
+      --white: #fff;
+      --muted: #65748b;
+      --line: #dbe3ec;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--navy);
+    }
+    header {
+      background: var(--white);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 1px 5px #14213d18;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    header h1 { margin: 0; color: var(--blue); font-size: 27px; }
+    header button { width: auto; margin: 0; }
+    button {
+      border: 0;
+      border-radius: 9px;
+      padding: 12px;
+      background: var(--blue);
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #f7f9fb;
+      border-radius: 12px;
+      padding: 13px;
+      margin: 6px 0;
+      font: inherit;
+    }
+    main { width: min(680px, 100%); margin: 18px auto; padding: 0 12px; }
+    .card {
+      background: var(--white);
+      padding: 16px;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px #14213d0c;
+    }
+    h2 { font-size: 19px; margin: 0 0 12px; }
+    .muted { color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .stories {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 5px 0;
+    }
+    .story {
+      min-width: 95px;
+      height: 125px;
+      border-radius: 13px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(145deg, #1877f2, #7b61d1);
+      color: white;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      padding: 8px;
+    }
+    .story:first-child { background: #e9f2ff; color: var(--blue); }
+    .story span { font-size: 27px; }
+    .quick { display: flex; gap: 8px; margin-top: 10px; }
+    .quick button { flex: 1; }
+    .post {
+      border-bottom: 1px solid var(--line);
+      padding: 14px 0;
+      overflow-wrap: anywhere;
+    }
+    .post:last-child { border-bottom: 0; }
+    .post p { white-space: pre-wrap; }
+    .post small { color: var(--muted); }
+    .post-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .post-actions button { flex: 1; background: #edf3fb; color: var(--navy); }
+    .video-box {
+      background: #14213d;
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    video { width: 100%; max-height: 420px; background: #111; border-radius: 10px; }
+    nav {
+      display: flex;
+      justify-content: space-around;
+      gap: 4px;
+      padding: 10px 4px;
+      background: white;
+      position: sticky;
+      bottom: 0;
+      z-index: 4;
+      border-top: 1px solid var(--line);
+    }
+    nav button { background: transparent; color: var(--navy); padding: 9px 7px; }
+    dialog {
+      width: min(600px, 94%);
+      max-height: 85vh;
+      border: 0;
+      border-radius: 16px;
+      padding: 18px;
+    }
+    dialog::backdrop { background: #07152dbb; }
+    footer { text-align: center; padding: 18px; color: var(--muted); font-size: 13px; }
+    /* Hellokin app screen navigation */
+body {
+  padding-bottom: 90px;
+}
+
+.app-screen {
+  display: none !important;
+}
+
+.app-screen.active-screen {
+  display: block !important;
+}
+
+nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  justify-content: space-around;
+  gap: 4px;
+  padding: 10px 4px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  background: #ffffff;
+  border-top: 1px solid #dbe3ec;
+}
+
+nav button {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 2px;
+  font-size: 11px;
+}
+  /* Hellokin fixed bottom navigation */
+body {
+  padding-bottom: 85px;
+}
+
+nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-around;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 3px;
+  background: #fff;
+  border-top: 1px solid #dbe3ec;
+}
+
+nav button {
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
+  padding: 10px 1px;
+  font-size: 10px;
+}
+  </style>
+</head>
+<body>
+  <header>
+     <h1>Hellokin</h1>
+    <button id="openChat">💬 Chat</button>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Welcome to Hellokin 👋</h2>
+      <p class="muted">Connect with people, share your moments, and keep in touch.</p>
+    </section>
+
+    <section class="card" id="reels">
+      <h2>Stories</h2>
+      <div class="stories">
+        <div class="story"><span>＋</span>Create story</div>
+        <div class="story"><span>🌍</span>Discover</div>
+        <div class="story"><span>🎉</span>Moments</div>
+        <div class="story"><span>🎵</span>Trending</div>
+      </div>
+      <p class="muted">Story sharing will need its own upload and storage setup.</p>
+    </section>
+
+    <section class="card" id="home">
+      <h2>What's on your mind?</h2>
+      <textarea id="postText" rows="3" placeholder="Share something with your friends..."></textarea>
+      <button id="postButton" style="width:100%">Share post</button>
+      <p class="muted" id="message" aria-live="polite"></p>
+    </section>
+
+    <section class="card" id="reels">
+      <h2>🎬 Reels</h2>
+      <div class="video-box">
+        <p>Watch and share videos on Hellokin</p>
+        <p class="muted" style="color:#dbe3ec">
+          Direct video uploads and a shared Reels feed require cloud storage.
+          We'll connect that next.
+        </p>
+      </div>
+    </section>
+
+    <section class="card" id="feed">
+      <h2>Home feed</h2>
+      <div id="posts"></div>
+    </section>
+
+    <section class="card" id="people">
+      <h2>👥 People & Connections</h2>
+      <p class="muted">Your friend and connection features will use your Firebase accounts.</p>
+      <button id="peopleInfo" style="width:100%">Connections setup</button>
+      <p id="peopleMessage" class="muted" aria-live="polite"></p>
+    </section>
+
+    <section class="card" id="profile">
+      <h2>👤 My profile</h2>
+      <p class="muted">Your profile details will be connected to your Hellokin account.</p>
+    </section>
+  </main>
+
+  <nav>
+  <button data-screen="home" onclick="showScreen('home')">🏠 Home</button>
+  <button data-screen="reels" onclick="showScreen('reels')">🎬 Reels</button>
+  <button data-screen="people" onclick="showScreen('people')">👥 People</button>
+  <button onclick="window.hkChat ? window.hkChat.open() : document.getElementById('chatDlg').showModal()">💬 Chat</button>
+  <button data-screen="profile" onclick="showScreen('profile')">👤 Profile</button>
+  <button data-screen="settings" onclick="showScreen('settings')">⚙️ Settings</button>
+</nav>
+<section class="card" id="settings">
+  <h2>⚙️ Settings</h2>
+
+  <h3>Profile picture</h3>
+  <img id="profilePicturePreview" alt="Your profile picture"
+       src="" style="width:96px;height:96px;border-radius:50%;object-fit:cover;background:#e5e7eb;display:block;margin:10px 0">
+  <input id="profilePictureFile" type="file" accept="image/*">
+  <button id="uploadProfilePicture" type="button" style="width:100%;margin-top:8px">Upload profile picture</button>
+  <p id="profilePictureMessage" class="muted" aria-live="polite"></p>
+
+  <label for="displayName">Display name</label>
+  <input id="displayName" type="text" placeholder="Your display name">
+
+  <label for="themeChoice">Appearance</label>
+  <select id="themeChoice" style="width:100%;padding:12px;margin:8px 0;border-radius:9px">
+    <option value="light">Light mode</option>
+    <option value="dark">Dark mode</option>
+  </select>
+
+  <label>
+    <input id="notifications" type="checkbox" style="width:auto">
+    Enable notifications (preference only)
+  </label>
+
+  <button id="saveSettings" style="width:100%">Save settings</button>
+  <button id="hellokinChangeUsername" style="width:100%;margin-top:10px">Change username</button>
+  <button id="hellokinSignOut" type="button" style="width:100%;margin-top:10px">Sign out</button>
+  <p id="settingsMessage" class="muted" aria-live="polite"></p>
+</section>
+
+<script>
+  const displayName = document.getElementById('displayName');
+  const themeChoice = document.getElementById('themeChoice');
+  const notifications = document.getElementById('notifications');
+  const settingsMessage = document.getElementById('settingsMessage');
+
+  const profilePreview = document.getElementById('profilePicturePreview');
+  const profileFile = document.getElementById('profilePictureFile');
+  const profileMessage = document.getElementById('profilePictureMessage');
+
+  window.addEventListener('hellokin-profile', event => {
+    if (event.detail?.photoURL) profilePreview.src = event.detail.photoURL;
+  });
+
+  profileFile.addEventListener('change', () => {
+    const file = profileFile.files?.[0];
+    if (file) profilePreview.src = URL.createObjectURL(file);
+  });
+
+  document.getElementById('uploadProfilePicture').addEventListener('click', async () => {
+    const file = profileFile.files?.[0];
+    if (!file) {
+      profileMessage.textContent = 'Choose a picture first.';
+      return;
+    }
+    profileMessage.textContent = 'Uploading picture...';
+    try {
+      if (!window.hkChat?.saveProfilePicture) throw new Error('Chat is still loading. Try again shortly.');
+      await window.hkChat.saveProfilePicture(file);
+      profileMessage.textContent = 'Profile picture saved to your account.';
+    } catch (error) {
+      profileMessage.textContent = error.message || 'Upload failed.';
+    }
+  });
+
+  try {
+    const saved = JSON.parse(localStorage.getItem('hellokin-settings') || '{}');
+    displayName.value = saved.displayName || '';
+    themeChoice.value = saved.theme || 'light';
+    notifications.checked = !!saved.notifications;
+  } catch {}
+
+  function applyTheme(theme) {
+    document.body.style.background = theme === 'dark' ? '#111827' : '#eef2f6';
+    document.body.style.color = theme === 'dark' ? '#f9fafb' : '#14213d';
+    document.querySelectorAll('.card').forEach(card => {
+      card.style.background = theme === 'dark' ? '#1f2937' : '#fff';
+    });
+  }
+
+  applyTheme(themeChoice.value);
+
+  themeChoice.addEventListener('change', () => applyTheme(themeChoice.value));
+
+
+  document.getElementById('hellokinChangeUsername').addEventListener('click', () => {
+    if (window.hkChat && window.hkChat.changeUsername) {
+      window.hkChat.changeUsername();
+    } else {
+      settingsMessage.textContent = 'Open Chat and sign in first, then try again.';
+    }
+  });
+
+  document.getElementById('hellokinSignOut').addEventListener('click', async () => {
+    if (window.hkChat && window.hkChat.signOut) {
+      await window.hkChat.signOut();
+      settingsMessage.textContent = 'Signed out.';
+    } else {
+      settingsMessage.textContent = 'Open Chat and sign in first.';
+    }
+  });
+
+  document.getElementById('saveSettings').addEventListener('click', () => {
+    const settings = {
+      displayName: displayName.value.trim(),
+      theme: themeChoice.value,
+      notifications: notifications.checked
+    };
+    try {
+      localStorage.setItem('hellokin-settings', JSON.stringify(settings));
+      settingsMessage.textContent = 'Settings saved on this device.';
+      applyTheme(settings.theme);
+    } catch {
+      settingsMessage.textContent = 'Could not save settings on this device.';
+    }
+  });
+</script>
+<footer>© 2026 Hellokin</footer>
+
+  <dialog id="chatDlg">
+    <h2>💬 Hellokin Chat</h2>
+    <div id="chatBody"></div>
+  </dialog>
+
+  <script>
+    const textBox = document.getElementById("postText");
+    const postsBox = document.getElementById("posts");
+    const message = document.getElementById("message");
+    let posts = [];
+
+    try {
+      posts = JSON.parse(localStorage.getItem("hellokin-posts") || "[]");
+      if (!Array.isArray(posts)) posts = [];
+    } catch { posts = []; }
+
+    function renderPosts() {
+      postsBox.replaceChildren();
+      if (!posts.length) {
+        postsBox.textContent = "No posts yet. Share the first one!";
+        return;
+      }
+      posts.forEach(post => {
+        const article = document.createElement("article");
+        article.className = "post";
+        const author = document.createElement("strong");
+        author.textContent = "👤 Hellokin member";
+        const content = document.createElement("p");
+        content.textContent = post.text || "";
+        const date = document.createElement("small");
+        date.textContent = post.date || "";
+        const actions = document.createElement("div");
+        actions.className = "post-actions";
+        const like = document.createElement("button");
+        like.textContent = "👍 Like";
+        like.addEventListener("click", () => {
+          like.textContent = like.textContent === "👍 Like" ? "💙 Liked" : "👍 Like";
+        });
+        const comment = document.createElement("button");
+        comment.textContent = "💬 Comment";
+        comment.addEventListener("click", () => {
+          const reply = prompt("Write a comment:");
+          if (reply && reply.trim()) {
+            const p = document.createElement("p");
+            p.textContent = "💬 " + reply.trim();
+            article.appendChild(p);
+          }
+        });
+        actions.append(like, comment);
+        article.append(author, content, date, actions);
+        postsBox.appendChild(article);
+      });
+    }
+
+    document.getElementById("postButton").addEventListener("click", () => {
+      const text = textBox.value.trim();
+      if (!text) {
+        message.textContent = "Please write something first.";
+        return;
+      }
+      posts.unshift({ text, date: new Date().toLocaleString() });
+      posts = posts.slice(0, 50);
+      try {
+        localStorage.setItem("hellokin-posts", JSON.stringify(posts));
+        message.textContent = "Post saved on this device.";
+      } catch {
+        message.textContent = "Could not save the post on this device.";
+      }
+      textBox.value = "";
+      renderPosts();
+    });
+
+    document.getElementById("openChat").addEventListener("click", () => {
+      const dlg = document.getElementById("chatDlg");
+      if (window.hkChat) {
+        window.hkChat.open();
+      } else {
+        dlg.showModal();
+        document.getElementById("chatBody").textContent =
+          "Chat is not connected yet. We will finish the Firebase connection next.";
+      }
+    });
+
+    document.getElementById("peopleInfo").addEventListener("click", () => {
+      document.getElementById("peopleMessage").textContent =
+        "Friend discovery and requests still need to be connected to Firebase.";
+    });
+
+    renderPosts();
+  </script>
+
+  <script type="module" src="./chat.js"></script>
+  <script>
+ function showScreen(screenId) {
+  const screens = [
+    'home',
+    'feed',
+    'reels',
+    'people',
+    'profile',
+    'settings'
+  ];
+
+  screens.forEach(id => {
+    const section = document.getElementById(id);
+    if (section) {
+      section.classList.add('app-screen');
+      section.classList.remove('active-screen');
+    }
+  });
+
+  const target = document.getElementById(screenId);
+  if (target) {
+    target.classList.add('app-screen', 'active-screen');
+  }
+
+  document.querySelectorAll('nav button[data-screen]').forEach(button => {
+    button.classList.toggle(
+      'active-tab',
+      button.dataset.screen === screenId
+    );
+  });
+
+  window.scrollTo(0, 0);
+}
+
+ showScreen('home');
+</script>
+</body>
+</html>
+

@@ -1,0 +1,298 @@
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,setDoc,getDoc,query,where,collection,addDoc,onSnapshot,orderBy,serverTimestamp,deleteDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {firebaseConfig as cfg} from "./firebase-config.js";
+import {cloudinary} from "./cloudinary-config.js";
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dlg = $('chatDlg'), body = $('chatBody');
+const ok = cfg.apiKey && !cfg.apiKey.startsWith('PASTE');
+let auth, db, me = null, unsub = null;
+
+const st = document.createElement('style');
+st.textContent = '#chatDlg .msgs{height:46vh;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:4px 0}#chatDlg .m{max-width:80%;padding:8px 12px;border-radius:14px;background:var(--soft);overflow-wrap:anywhere;font-size:15px}#chatDlg .m.me{align-self:flex-end;background:var(--btn);color:var(--btnink)}#chatDlg .crow{display:flex;gap:8px;margin-top:10px}#chatDlg .crow input{flex:1}#chatDlg .li{width:100%;justify-content:flex-start;margin-top:8px;border-radius:14px}';
+st.textContent += "\n/* HELL0KIN CHAT REDESIGN */\n#chatDlg .msgs {\n  background:\n    radial-gradient(circle at 15% 20%, #dceeff 0, transparent 34%),\n    radial-gradient(circle at 85% 75%, #fce7f3 0, transparent 32%),\n    #f3f6fc;\n  background-attachment: local;\n  padding: 12px;\n  border-radius: 16px;\n}\n#chatDlg .m {\n  max-width: 80%;\n  width: fit-content;\n  padding: 10px 13px;\n  border-radius: 16px 16px 16px 5px;\n  background: #ffffff;\n  color: #18243a;\n  box-shadow: 0 2px 6px #15233a12;\n  overflow-wrap: anywhere;\n}\n#chatDlg .m.me {\n  align-self: flex-end;\n  border-radius: 16px 16px 5px 16px;\n  background: #d7f8df;\n  color: #123b27;\n}\n#chatDlg .m img,\n#chatDlg .m video {\n  display: block;\n  border-radius: 12px;\n}\n#chatDlg .li {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n#chatDlg .letter-avatar {\n  display: inline-flex;\n  width: 42px;\n  height: 42px;\n  min-width: 42px;\n  align-items: center;\n  justify-content: center;\n  border-radius: 50%;\n  background: #dce8ff;\n  color: #203b75;\n  font-weight: 700;\n  text-transform: uppercase;\n}\n";
+
+st.textContent += "\n/* FULLSCREEN HELL0KIN CHAT */\n#chatDlg {\n  box-sizing: border-box;\n  position: fixed;\n  inset: 0;\n  width: 100%;\n  max-width: none;\n  height: 100%;\n  height: 100dvh;\n  max-height: none;\n  margin: 0;\n  padding: max(12px, env(safe-area-inset-top))\n           14px\n           max(12px, env(safe-area-inset-bottom));\n  border: 0;\n  border-radius: 0;\n  overflow: hidden;\n  background: var(--card, white);\n  color: var(--ink, #14213d);\n}\n#chatDlg[open] {\n  display: flex;\n  flex-direction: column;\n}\n#chatDlg > h2 {\n  flex: 0 0 auto;\n}\n#chatDlg #chatBody {\n  flex: 1 1 auto;\n  min-height: 0;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n}\n#chatDlg #chatBody > .dlgacts:first-child {\n  flex: 0 0 auto;\n}\n#chatDlg .msgs {\n  flex: 1 1 auto;\n  height: auto;\n  min-height: 0;\n  max-height: none;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n#chatDlg .crow {\n  flex: 0 0 auto;\n  padding-bottom: 4px;\n}\n#chatDlg .crow input {\n  min-width: 0;\n}\n#chatDlg #chatBody > #cl {\n  flex: 1 1 auto;\n  min-height: 0;\n  overflow-y: auto;\n}\n";
+document.head.append(st);
+
+const stop = () => { if (unsub) { unsub(); unsub = null; } };
+const view = h => { body.innerHTML = h; };
+const top = (t, back) => '<div class="dlgacts" style="margin:0 0 10px"><h2 style="margin:0">' + t + '</h2><span style="flex:1"></span>' + (back ? '<button type="button" data-a="back">Back</button>' : '') + '<button type="button" data-a="close">Close</button></div>';
+
+function show() {
+  stop();
+  if (!ok) return view(top('Chat') + '<p>Chat needs a free Firebase project. Add its details to firebase-config.js, then deploy again.</p>');
+  if (!me) return view(top('Chat') + '<label>Email</label><input id="cE" type="email"><label>Password (6+ characters)</label><input id="cP" type="password"><p class="err" id="cErr"></p><div class="dlgacts"><button type="button" data-a="in">Sign in</button><button type="button" class="main" data-a="up">Create account</button></div>');
+  if (!me.username) return view(top('Pick a username') + '<label>Username (letters, numbers, _)</label><input id="cU" autocapitalize="none"><p class="err" id="cErr"></p><button type="button" class="main" data-a="uname">Save username</button>');
+  chatList();
+}
+
+function chatList() {
+  view(top('Chats') + '<div class="crow"><input id="cU" placeholder="Friend\'s username" autocapitalize="none"><button type="button" class="main" data-a="start">Start</button></div><p class="err" id="cErr"></p><div id="cl"></div>');
+  unsub = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), s => {
+    const l = $('cl'); if (!l) return;
+    l.innerHTML = s.docs.map(d => {
+      const data = d.data();
+      const n = data.names || {}, o = Object.keys(n).find(k => k !== me.uid);
+      const name = n[o] || '?';
+      const photos = data.photos || {};
+      const photo = photos[o] || '';
+      const avatar = photo
+        ? '<img src="' + esc(photo) + '" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0">'
+        : '<span class="letter-avatar">' + esc(name.slice(0,1).toUpperCase()) + '</span>';
+      return '<button type="button" class="li" data-a="open" data-id="' + esc(d.id) + '" data-n="' + esc(name) + '" style="display:flex;align-items:center;gap:10px">' + avatar + '<span>@' + esc(name) + '</span></button>';
+    }).join('') || '<p class="small">No chats yet. Enter a friend\'s username above.</p>';
+  }, x => {
+    const l = $('cl');
+    if (l) l.innerHTML = '<p class="err">Chat connection error: ' + esc(x.code || x.message) + '</p>';
+  });
+}
+
+function openChat(id, name) {
+  stop();
+  view(top('Chats', 1) +
+    '<div class="msgs" id="cm"></div>' +
+    '<div id="stickerTray" hidden style="gap:8px;flex-wrap:wrap;padding:6px 0">' +
+      '<button type="button" data-sticker="😀">😀</button>' +
+      '<button type="button" data-sticker="❤️">❤️</button>' +
+      '<button type="button" data-sticker="😂">😂</button>' +
+      '<button type="button" data-sticker="🥹">🥹</button>' +
+      '<button type="button" data-sticker="👍">👍</button>' +
+      '<button type="button" data-sticker="🎉">🎉</button></div>' +
+    '<div class="crow" style="align-items:center;flex-wrap:wrap">' +
+      '<button type="button" data-a="stickers">😊</button>' +
+      '<button type="button" data-a="camera">📷</button>' +
+      '<button type="button" data-a="file">📎</button>' +
+      '<input id="cT" placeholder="Message" maxlength="1000" style="flex:1;min-width:90px">' +
+      '<button type="button" class="main" data-a="send" data-id="' + esc(id) + '">Send</button></div>' +
+    '<input id="cameraFile" type="file" accept="image/*" capture="environment" hidden>' +
+    '<input id="attachFile" type="file" accept="image/*,video/*,application/pdf,.txt,.doc,.docx" hidden>' +
+    '<p id="attachmentStatus" class="small" aria-live="polite"></p>');
+  unsub = onSnapshot(query(collection(db, 'chats', id, 'messages'), orderBy('t')), s => {
+    const b = $('cm'); if (!b) return;
+    b.innerHTML = s.docs.map(d => {
+      const m = d.data();
+      const cls = 'm' + (m.from === me.uid ? ' me' : '');
+      if (m.kind === 'image') return '<div class="' + cls + '"><img src="' + esc(m.text) + '" alt="Shared photo" style="max-width:220px;width:100%;border-radius:12px"></div>';
+      if (m.kind === 'video') return '<div class="' + cls + '"><video controls src="' + esc(m.text) + '" style="max-width:220px;width:100%"></video></div>';
+      if (m.kind === 'file') return '<div class="' + cls + '"><a href="' + esc(m.text) + '" target="_blank" rel="noopener noreferrer">' + esc(m.name || 'Open attachment') + '</a></div>';
+      return '<div class="' + cls + '">' + esc(m.text || '') + '</div>';
+    }).join('');
+    b.scrollTop = b.scrollHeight;
+  }, x => {
+    const b = $('cm');
+    if (b) b.innerHTML = '<p class="err">Message connection error: ' + esc(x.code || x.message) + '</p>';
+  });
+}
+
+body.addEventListener('click', async e => {
+  const t = e.target.closest('[data-a], [data-sticker]'); if (!t) return;
+  e.preventDefault();
+  const a = t.dataset.a, err = m => { const x = $('cErr'); if (x) x.textContent = m; };
+  try {
+    if (t.dataset.sticker) {
+      const input = $('cT');
+      if (input) input.value += t.dataset.sticker;
+      return;
+    }
+    if (a === 'stickers') {
+      const tray = $('stickerTray');
+      if (tray) {
+        tray.hidden = !tray.hidden;
+        tray.style.display = tray.hidden ? 'none' : 'flex';
+      }
+      return;
+    }
+    if (a === 'camera') { $('cameraFile')?.click(); return; }
+    if (a === 'file') { $('attachFile')?.click(); return; }
+    if (a === 'close') { stop(); dlg.close(); }
+    else if (a === 'back') show();
+    else if (a === 'in' || a === 'up') {
+      const f = a === 'in' ? signInWithEmailAndPassword : createUserWithEmailAndPassword;
+      await f(auth, $('cE').value.trim(), $('cP').value);
+    }
+    else if (a === 'out') await signOut(auth);
+    else if (a === 'changeuname') {
+      view(top('Change username', 1) + '<label>New username (letters, numbers, _)</label><input id="cU" autocapitalize="none" maxlength="20" value="' + esc(me.username) + '"><p class="err" id="cErr"></p><button type="button" class="main" data-a="saveuname">Save username</button>');
+    }
+    else if (a === 'saveuname') {
+      const n = $('cU').value.trim().toLowerCase();
+      if (!/^[a-z0-9_]{3,20}$/.test(n)) return err('Use 3-20 letters, numbers or _.');
+      const old = me.username;
+      if (n === old) return show();
+      const existing = await getDoc(doc(db, 'usernames', n));
+      if (existing.exists() && existing.data().uid !== me.uid) return err('That username is taken.');
+      await setDoc(doc(db, 'usernames', n), {uid: me.uid});
+      await setDoc(doc(db, 'users', me.uid), {username: n}, {merge: true});
+      if (old) {
+        const oldRef = doc(db, 'usernames', old);
+        const oldSnap = await getDoc(oldRef);
+        if (oldSnap.exists() && oldSnap.data().uid === me.uid) await deleteDoc(oldRef);
+      }
+      me.username = n;
+      show();
+    }
+    else if (a === 'uname') {
+      const n = $('cU').value.trim().toLowerCase();
+      if (!/^[a-z0-9_]{3,20}$/.test(n)) return err('Use 3-20 letters, numbers or _.');
+      try { await setDoc(doc(db, 'usernames', n), {uid: me.uid}); } catch (x) { return err('That username is taken.'); }
+      await setDoc(doc(db, 'users', me.uid), {username: n});
+      me.username = n; show();
+    }
+    else if (a === 'start') {
+      const n = $('cU').value.trim().toLowerCase().replace(/^@/, '');
+      if (!n) return;
+      const s = await getDoc(doc(db, 'usernames', n));
+      if (!s.exists()) return err('No user with that username.');
+      const o = s.data().uid;
+      if (o === me.uid) return err('That is you.');
+      const id = [me.uid, o].sort().join('_');
+      const otherDoc = await getDoc(doc(db, 'users', o));
+      const otherProfile = otherDoc.exists() ? otherDoc.data() : {};
+      await setDoc(doc(db, 'chats', id), {
+        members: [me.uid, o],
+        names: {[me.uid]: me.username, [o]: otherProfile.username || n},
+        photos: {[me.uid]: me.photoURL || '', [o]: otherProfile.photoURL || ''}
+      }, {merge: true});
+      openChat(id, otherProfile.username || n);
+    }
+    else if (a === 'open') openChat(t.dataset.id, t.dataset.n);
+    else if (a === 'send') {
+      const i = $('cT'), v = i.value.trim(); if (!v) return;
+      i.value = '';
+      await addDoc(collection(db, 'chats', t.dataset.id, 'messages'), {from: me.uid, text: v, t: serverTimestamp()});
+    }
+  } catch (x) {
+    err(x.code ? x.code.replace('auth/', '').replace(/-/g, ' ') : 'Something went wrong.');
+  }
+});
+
+document.addEventListener('change', async e => {
+  if (!['cameraFile', 'attachFile'].includes(e.target.id)) return;
+  const input = e.target;
+  const file = input.files?.[0];
+  if (!file) return;
+  const status = $('attachmentStatus');
+  const sendButton = body.querySelector('[data-a="send"]');
+  const chatId = sendButton?.dataset.id;
+
+  try {
+    if (!me || !chatId) throw new Error('Open a chat and sign in first.');
+    if (!file.type.startsWith('image/') &&
+        !file.type.startsWith('video/') &&
+        !['application/pdf', 'text/plain', 'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.type)) {
+      throw new Error('This file type is not supported.');
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error('Choose a file smaller than 10 MB.');
+    }
+    if (!cloudinary.cloudName || !cloudinary.uploadPreset) {
+      throw new Error('Cloudinary settings are incomplete.');
+    }
+
+    if (status) status.textContent = 'Uploading ' + file.name + '...';
+    const form = new FormData();
+    form.append('file', file);
+    form.append('upload_preset', cloudinary.uploadPreset);
+
+    const response = await fetch(
+      'https://api.cloudinary.com/v1_1/' + cloudinary.cloudName + '/auto/upload',
+      {method: 'POST', body: form}
+    );
+    const result = await response.json();
+    if (!response.ok || !result.secure_url) {
+      throw new Error(result.error?.message || 'Upload failed. Check Cloudinary settings.');
+    }
+
+    const kind = file.type.startsWith('image/') ? 'image'
+      : file.type.startsWith('video/') ? 'video' : 'file';
+
+    await addDoc(collection(db, 'chats', chatId, 'messages'), {
+      from: me.uid,
+      text: result.secure_url,
+      kind,
+      name: file.name,
+      t: serverTimestamp()
+    });
+
+    if (status) status.textContent = 'Attachment sent.';
+  } catch (error) {
+    if (status) status.textContent = error.message || 'Attachment failed.';
+  } finally {
+    input.value = '';
+  }
+});
+
+body.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'cT') body.querySelector('[data-a="send"]').click();
+});
+
+if (ok) {
+  auth = getAuth(initializeApp(cfg));
+  db = getFirestore();
+  onAuthStateChanged(auth, async u => {
+    me = null;
+    if (u) {
+      let profileData = {};
+      try {
+        const s = await getDoc(doc(db, 'users', u.uid));
+        if (s.exists()) profileData = s.data();
+      } catch (x) {}
+      me = {uid: u.uid, username: profileData.username || '', photoURL: profileData.photoURL || ''};
+      window.dispatchEvent(new CustomEvent('hellokin-profile', {
+        detail: {username: me.username, photoURL: me.photoURL}
+      }));
+    }
+    if (dlg.open) show();
+  });
+}
+window.hkChat = {
+  open() { if (!dlg.open) dlg.showModal(); show(); },
+  async signOut() { if (auth) await signOut(auth); },
+  async saveProfilePicture(file) {
+    if (!me || !auth?.currentUser) throw new Error('Sign in to Chat first.');
+    if (!file || !file.type.startsWith('image/')) throw new Error('Choose an image file.');
+    if (file.size > 5 * 1024 * 1024) throw new Error('Choose an image smaller than 5 MB.');
+    if (!cloudinary.cloudName || !cloudinary.uploadPreset) throw new Error('Cloudinary settings are incomplete.');
+
+    const form = new FormData();
+    form.append('file', file);
+    form.append('upload_preset', cloudinary.uploadPreset);
+
+    const response = await fetch(
+      'https://api.cloudinary.com/v1_1/' + cloudinary.cloudName + '/image/upload',
+      {method: 'POST', body: form}
+    );
+    const result = await response.json();
+    if (!response.ok || !result.secure_url) {
+      throw new Error(result.error?.message || 'Image upload failed. Check the unsigned upload preset.');
+    }
+
+    await setDoc(doc(db, 'users', me.uid), {
+      username: me.username,
+      photoURL: result.secure_url
+    }, {merge: true});
+
+    me.photoURL = result.secure_url;
+    window.dispatchEvent(new CustomEvent('hellokin-profile', {
+      detail: {username: me.username, photoURL: me.photoURL}
+    }));
+    return result.secure_url;
+  },
+  changeUsername() {
+    if (!me) {
+      if (!dlg.open) dlg.showModal();
+      show();
+      return;
+    }
+    if (!dlg.open) dlg.showModal();
+    view(top('Change username', 1) +
+      '<label>New username (letters, numbers, _)</label>' +
+      '<input id="cU" autocapitalize="none" maxlength="20" value="' + esc(me.username || '') + '">' +
+      '<p class="err" id="cErr"></p>' +
+      '<button type="button" class="main" data-a="saveuname">Save username</button>');
+  }
+};

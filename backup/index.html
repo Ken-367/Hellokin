@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#14213d">
+  <meta name="description" content="Hellokin — connect, chat, and share with friends.">
+  <title>Hellokin</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eef2f6;
+      color: #14213d;
+    }
+    header {
+      background: #14213d;
+      color: white;
+      padding: 22px 18px;
+      text-align: center;
+    }
+    header h1 { margin: 0; font-size: 30px; }
+    header p { margin-bottom: 0; color: #dbe3ec; }
+    main { max-width: 600px; margin: 25px auto; padding: 16px; }
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 16px #14213d10;
+    }
+    h2 { margin-top: 0; }
+    input, textarea, button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 10px;
+      border-radius: 9px;
+      font: inherit;
+    }
+    input, textarea { border: 1px solid #dbe3ec; }
+    button {
+      background: #14213d;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .muted { color: #5b6b80; font-size: 14px; }
+    #posts article {
+      background: #f7f9fb;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 12px;
+      overflow-wrap: anywhere;
+    }
+    footer { text-align: center; padding: 24px; color: #5b6b80; }
+  </style>
+
+<style>
+.hellokin-reel {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid #dbe3ec;
+  border-radius: 14px;
+  background: #fff;
+}
+.hellokin-reel video {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  border-radius: 10px;
+  background: #14213d;
+}
+.hellokin-reel p {
+  overflow-wrap: anywhere;
+  margin-bottom: 0;
+}
+#reelUrl, #reelCaption {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 8px 0;
+}
+</style>
+
+</head>
+<body>
+  <header>
+    <h1>Hellokin</h1>
+    <p>Connect. Chat. Share.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Welcome to Hellokin 👋</h2>
+      <p>Your space to share your thoughts and updates.</p>
+      <p class="muted">This starter version saves posts only in this browser.</p>
+    </section>
+
+    <section class="card">
+      <h2>Create a post</h2>
+      <textarea id="postText" rows="4" placeholder="What's on your mind?"></textarea>
+      <button id="postButton">Share post</button>
+      <p id="message" class="muted" aria-live="polite"></p>
+    </section>
+
+    <section class="card">
+      <h2>Recent posts</h2>
+      <div id="posts"></div>
+    </section>
+  </main>
+
+  <footer>© 2026 Hellokin</footer>
+
+  <script>
+    const textBox = document.getElementById("postText");
+    const postsBox = document.getElementById("posts");
+    const message = document.getElementById("message");
+
+    let posts = [];
+    try {
+      posts = JSON.parse(localStorage.getItem("hellokin-posts") || "[]");
+      if (!Array.isArray(posts)) posts = [];
+    } catch {
+      posts = [];
+    }
+
+    function renderPosts() {
+      postsBox.replaceChildren();
+
+      if (posts.length === 0) {
+        postsBox.textContent = "No posts yet. Share the first one!";
+        return;
+      }
+
+      posts.forEach(post => {
+        const article = document.createElement("article");
+        const content = document.createElement("p");
+        const date = document.createElement("small");
+
+        content.textContent = post.text;
+        date.textContent = post.date;
+        article.append(content, date);
+        postsBox.appendChild(article);
+      });
+    }
+
+    document.getElementById("postButton").addEventListener("click", () => {
+      const text = textBox.value.trim();
+
+      if (!text) {
+        message.textContent = "Please write something first.";
+        return;
+      }
+
+      posts.unshift({
+        text,
+        date: new Date().toLocaleString()
+      });
+
+      posts = posts.slice(0, 50);
+
+      try {
+        localStorage.setItem("hellokin-posts", JSON.stringify(posts));
+        message.textContent = "Your post has been saved on this device.";
+      } catch {
+        message.textContent = "Storage is unavailable in this browser.";
+      }
+
+      textBox.value = "";
+      renderPosts();
+    });
+
+    renderPosts();
+  </script>
+
+<section class="card" id="hellokin-reels-section">
+  <h2>🎬 Hellokin Reels</h2>
+  <p class="muted">Add a video using a direct video URL.</p>
+  <input id="reelUrl" type="url"
+    placeholder="Paste video URL (MP4)" />
+  <input id="reelCaption" type="text"
+    placeholder="Write a caption" />
+  <button id="addReel">Add Reel</button>
+  <p id="reelMessage" class="muted" aria-live="polite"></p>
+  <div id="reelsContainer"></div>
+</section>
+
+<script type="module">
+  import { renderReels } from './reels.js';
+
+  const container = document.getElementById('reelsContainer');
+  const urlInput = document.getElementById('reelUrl');
+  const captionInput = document.getElementById('reelCaption');
+  const message = document.getElementById('reelMessage');
+
+  let reels = [];
+  try {
+    reels = JSON.parse(localStorage.getItem('hellokin-reels') || '[]');
+    if (!Array.isArray(reels)) reels = [];
+  } catch {
+    reels = [];
+  }
+
+  renderReels(container, reels);
+
+  document.getElementById('addReel').addEventListener('click', () => {
+    const videoUrl = urlInput.value.trim();
+    const caption = captionInput.value.trim();
+
+    try {
+      const url = new URL(videoUrl);
+      if (!['https:', 'http:'].includes(url.protocol)) {
+        throw new Error('Invalid URL');
+      }
+    } catch {
+      message.textContent = 'Enter a valid video URL first.';
+      return;
+    }
+
+    reels.unshift({ videoUrl, caption });
+
+    try {
+      localStorage.setItem('hellokin-reels', JSON.stringify(reels));
+    } catch {
+      reels.shift();
+      message.textContent = 'Could not save this Reel on your device.';
+      return;
+    }
+
+    renderReels(container, reels);
+    urlInput.value = '';
+    captionInput.value = '';
+    message.textContent = 'Reel added on this device.';
+  });
+</script>
+
+</body>
+</html>
+

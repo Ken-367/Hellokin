@@ -1,5 +1,5 @@
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendEmailVerification,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,doc,setDoc,getDoc,query,where,collection,addDoc,onSnapshot,orderBy,serverTimestamp,deleteDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {firebaseConfig as cfg} from "./firebase-config.js";
 import {cloudinary} from "./cloudinary-config.js";
@@ -110,6 +110,7 @@ body.addEventListener('click', async e => {
     if (a === 'file') { $('attachFile')?.click(); return; }
     if (a === 'close') { stop(); dlg.close(); }
     else if (a === 'back') { stop(); chatList(); }
+    else if (a === 'signin') { show(); }
     else if (a === 'toggle-password') {
       const input = $(t.dataset.target);
       if (input) {
@@ -123,8 +124,20 @@ body.addEventListener('click', async e => {
       }
     }
     else if (a === 'in' || a === 'up') {
-      const f = a === 'in' ? signInWithEmailAndPassword : createUserWithEmailAndPassword;
-      await f(auth, $('cE').value.trim(), $('cP').value);
+      const email = $('cE').value.trim();
+      const password = $('cP').value;
+      if (a === 'up') {
+        const credential = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(credential.user);
+        await signOut(auth);
+        view(top('Verify your email') + '<p>We sent a verification link to <strong>' + esc(email) + '</strong>. Open that email and click the link, then return here and sign in.</p><button type="button" class="main" data-a="signin">Back to sign in</button>');
+      } else {
+        const credential = await signInWithEmailAndPassword(auth, email, password);
+        if (!credential.user.emailVerified) {
+          await signOut(auth);
+          err('Please verify your email first. Open the verification email, click its link, then sign in again.');
+        }
+      }
     }
     else if (a === 'out') await signOut(auth);
     else if (a === 'changeuname') {
@@ -244,7 +257,7 @@ body.addEventListener('keydown', e => {
 });
 
 if (ok) {
-  auth = getAuth(initializeApp(cfg));
+  auth = getAuth(getApps().length ? getApp() : initializeApp(cfg));
   db = getFirestore();
   onAuthStateChanged(auth, async u => {
     me = null;
