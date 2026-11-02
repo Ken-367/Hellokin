@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#14213d">
+  <link rel="manifest" href="./manifest.json">
   <meta name="description" content="Hellokin — connect, chat, and share with friends.">
   <title>Hellokin</title>
   <style>
@@ -203,29 +204,29 @@ nav button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  background: #14213d;
-  color: #ffffff;
+  gap: 18px;
+  background: #ffffff;
+  color: #14213d;
   font-family: Arial, sans-serif;
   transition: opacity .3s ease;
 }
 #hkSplash .hk-logo {
-  font-size: 38px;
-  font-weight: 800;
-  letter-spacing: -1px;
-  color: #ffffff;
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  border-radius: 24px;
 }
 #hkSplash .hk-spinner {
-  width: 38px;
-  height: 38px;
-  border: 4px solid #ffffff35;
-  border-top-color: #60a5fa;
+  width: 34px;
+  height: 34px;
+  border: 4px solid #dbeafe;
+  border-top-color: #2563eb;
   border-radius: 50%;
   animation: hkSpin .8s linear infinite;
 }
 #hkSplash .hk-loading-text {
   font-size: 14px;
-  color: #dbeafe;
+  color: #64748b;
 }
 #hkSplash.hk-hidden {
   opacity: 0;
@@ -251,7 +252,7 @@ nav button {
 
 
 <div id="hkSplash" role="status" aria-label="Loading Hellokin">
-  <div class="hk-logo">Hellokin</div>
+  <img class="hk-logo" src="./hellokin-icons/icons/icon-512.png" alt="Hellokin app icon">
   <div class="hk-spinner" aria-hidden="true"></div>
   <div class="hk-loading-text">Getting things ready...</div>
 </div>
@@ -264,7 +265,9 @@ nav button {
   <main>
 <section class="card" id="stories">
       <h2>Stories</h2>
-      <div class="stories" style="display:flex;gap:12px;overflow-x:auto;padding:8px 2px 14px">
+      <div id="storyRail" class="stories" style="display:flex;gap:12px;overflow-x:auto;padding:8px 2px 14px"></div>
+<input id="storyFile" type="file" accept="image/*,video/*" hidden>
+<p id="storyStatus" class="muted" aria-live="polite"></p>
         <button type="button" class="story" style="min-width:82px;min-height:112px;border-radius:18px;border:1px solid var(--line);background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px"><span style="font-size:30px">＋</span><small>Create</small></button>
         <div class="story" style="min-width:82px;min-height:112px;border-radius:18px;background:linear-gradient(160deg,#8bb7ff,#e4ecff);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#14213d"><span style="font-size:30px">🌍</span><small>Discover</small></div>
         <div class="story" style="min-width:82px;min-height:112px;border-radius:18px;background:linear-gradient(160deg,#ffc6d9,#fff0f5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#51233a"><span style="font-size:30px">🎉</span><small>Moments</small></div>
@@ -733,11 +736,18 @@ nav button {
   }
 
   window.addEventListener('load', hideSplash, { once: true });
-  setTimeout(hideSplash, 3000);
+  setTimeout(hideSplash, 5000);
 })();
 </script>
 
 <script type="module" src="./welcome-auth.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(console.error);
+  });
+}
+</script>
 </body>
 </html>
 
