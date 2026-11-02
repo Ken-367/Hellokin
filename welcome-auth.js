@@ -90,9 +90,13 @@ if (welcome) {
   });
 
     const create = document.getElementById("welcomeCreate");
+    const signIn = document.getElementById("welcomeSignIn");
+    signIn.style.display = "none";
     let mode = "in";
 
     document.getElementById("welcomeSignIn").addEventListener("click", () => {
+      create.style.display = "block";
+      signIn.style.display = "none";
       mode = "in";
       heading.textContent = "Welcome back";
       form.querySelector('button[type="submit"]').textContent = "Sign in";
@@ -101,6 +105,8 @@ if (welcome) {
     });
 
     create.addEventListener("click", () => {
+      create.style.display = "none";
+      signIn.style.display = "block";
       mode = "up";
       heading.textContent = "Create your account";
       form.querySelector('button[type="submit"]').textContent = "Create account";
@@ -141,7 +147,7 @@ if (welcome) {
         const result = await signInWithPopup(auth, new GoogleAuthProvider());
         if (result.user) showApp();
       } catch (error) {
-        msg.textContent = error.message || "Google sign-in failed. Please try again.";
+        msg.textContent = (error.code || "Google error") + ": " + (error.message || "Please try again.");
       }
     });
   }
