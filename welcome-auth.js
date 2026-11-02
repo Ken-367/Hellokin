@@ -15,6 +15,23 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 const passwordStyle = document.createElement("style");
 passwordStyle.textContent = `
+  body.hk-auth-screen > :not(#hkWelcome) {
+    display: none !important;
+  }
+  #hkWelcome {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    overflow-y: auto;
+  }
+  .hk-google-g {
+    font-size: 23px;
+    font-weight: 800;
+    background: conic-gradient(#4285F4, #34A853, #FBBC05, #EA4335, #4285F4);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
   #hkWelcome .hk-password-row {
     display: flex;
     align-items: center;
@@ -55,11 +72,13 @@ window.hkMainAuth = {
 
 if (welcome) {
   const showWelcome = () => {
+    document.body.classList.add("hk-auth-screen");
     welcome.hidden = false;
     appParts.forEach(el => el.hidden = true);
   };
 
   const showApp = () => {
+    document.body.classList.remove("hk-auth-screen");
     welcome.hidden = true;
     appParts.forEach(el => el.hidden = false);
     if (typeof window.showScreen === "function") window.showScreen("home");
@@ -89,7 +108,7 @@ if (welcome) {
           </form>
 
           <button id="welcomeOpenCreate" type="button" style="width:100%;margin-top:10px">Create account</button>
-          <button id="welcomeGoogle" type="button" style="width:100%;margin-top:10px;background:#fff;color:#14213d;border:1px solid #dbe3ec">Continue with Google</button>
+          <button id="welcomeGoogle" type="button" style="width:100%;margin-top:10px;background:#fff;color:#14213d;border:1px solid #dbe3ec;display:flex;align-items:center;justify-content:center;gap:10px"><span class="hk-google-g">G</span>Continue with Google</button>
         </section>
 
         <section id="welcomeRegister" class="card" hidden style="width:100%;max-width:420px;padding:24px;box-sizing:border-box">
