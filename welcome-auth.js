@@ -67,89 +67,137 @@ if (welcome) {
 
   function render(message = "") {
     welcome.innerHTML = `
-      <div class="card" style="max-width:420px;margin:30px auto;padding:24px">
-        <h1 style="text-align:center">Hellokin</h1>
-        <p class="muted" style="text-align:center">Connect, share, and discover.</p>
-        <h2 id="welcomeHeading">Welcome back</h2>
-        <form id="welcomeForm">
-          <label for="welcomeEmail">Email</label>
-          <input id="welcomeEmail" type="email" autocomplete="email" required>
-          <label for="welcomePassword">Password (at least 6 characters)</label>
-          <div class="hk-password-row">
-            <input id="welcomePassword" type="password" autocomplete="current-password" minlength="6" required style="flex:1;min-width:0">
-            <button class="hk-password-toggle" id="welcomePasswordToggle" type="button" aria-label="Show password" title="Show password">👁</button>
-          </div>
-          <p id="welcomeMessage" class="muted" role="status"></p>
-          <button type="submit" style="width:100%">Sign in</button>
-        </form>
-        <button id="welcomeCreate" type="button" style="width:100%;margin-top:10px">Create account</button>
-        <button id="welcomeSignIn" type="button" style="width:100%;margin-top:10px">Already have an account? Sign in</button>
-        <button id="welcomeGoogle" type="button" style="width:100%;margin-top:10px;background:#fff;color:#14213d;border:1px solid #dbe3ec">Continue with Google</button>
-        <p class="muted" style="text-align:center;margin-top:16px">New accounts must verify their email before signing in.</p>
+      <div style="min-height:100vh;display:grid;place-items:center;padding:20px;box-sizing:border-box">
+
+        <section id="welcomeLogin" class="card" style="width:100%;max-width:420px;padding:24px;box-sizing:border-box">
+          <h1 style="text-align:center">Hellokin</h1>
+          <p class="muted" style="text-align:center">Connect, share, and discover.</p>
+          <h2>Welcome back</h2>
+
+          <form id="welcomeLoginForm">
+            <label for="welcomeLoginEmail">Email</label>
+            <input id="welcomeLoginEmail" type="email" autocomplete="email" required style="width:100%;box-sizing:border-box">
+
+            <label for="welcomeLoginPassword">Password</label>
+            <div class="hk-password-row">
+              <input id="welcomeLoginPassword" type="password" autocomplete="current-password" required style="flex:1;min-width:0">
+              <button class="hk-password-toggle" id="welcomeLoginToggle" type="button" aria-label="Show password">👁</button>
+            </div>
+
+            <p id="welcomeLoginMessage" class="muted" role="status"></p>
+            <button type="submit" style="width:100%">Sign in</button>
+          </form>
+
+          <button id="welcomeOpenCreate" type="button" style="width:100%;margin-top:10px">Create account</button>
+          <button id="welcomeGoogle" type="button" style="width:100%;margin-top:10px;background:#fff;color:#14213d;border:1px solid #dbe3ec">Continue with Google</button>
+        </section>
+
+        <section id="welcomeRegister" class="card" hidden style="width:100%;max-width:420px;padding:24px;box-sizing:border-box">
+          <h1 style="text-align:center">Hellokin</h1>
+          <p class="muted" style="text-align:center">Join the community.</p>
+          <h2>Create your account</h2>
+
+          <form id="welcomeRegisterForm">
+            <label for="welcomeRegisterEmail">Email</label>
+            <input id="welcomeRegisterEmail" type="email" autocomplete="email" required style="width:100%;box-sizing:border-box">
+
+            <label for="welcomeRegisterPassword">Create password (at least 6 characters)</label>
+            <div class="hk-password-row">
+              <input id="welcomeRegisterPassword" type="password" autocomplete="new-password" minlength="6" required style="flex:1;min-width:0">
+              <button class="hk-password-toggle" id="welcomeRegisterToggle" type="button" aria-label="Show password">👁</button>
+            </div>
+
+            <p id="welcomeRegisterMessage" class="muted" role="status">Use an email you can open to verify your account.</p>
+            <button type="submit" style="width:100%">Create account</button>
+          </form>
+
+          <button id="welcomeBackToLogin" type="button" style="width:100%;margin-top:12px">Back to Sign in</button>
+        </section>
+
       </div>`;
 
-    const form = document.getElementById("welcomeForm");
-    const heading = document.getElementById("welcomeHeading");
-    const msg = document.getElementById("welcomeMessage");
-    const create = document.getElementById("welcomeCreate");
-    const signIn = document.getElementById("welcomeSignIn");
-    const submit = form.querySelector('button[type="submit"]');
-    const password = document.getElementById("welcomePassword");
-    let mode = "in";
+    const loginScreen = document.getElementById("welcomeLogin");
+    const registerScreen = document.getElementById("welcomeRegister");
+    const loginForm = document.getElementById("welcomeLoginForm");
+    const registerForm = document.getElementById("welcomeRegisterForm");
+    const loginMessage = document.getElementById("welcomeLoginMessage");
+    const registerMessage = document.getElementById("welcomeRegisterMessage");
 
-    function setMode(newMode) {
-      mode = newMode;
-      const creating = mode === "up";
-
-      create.style.display = creating ? "none" : "block";
-      signIn.style.display = creating ? "block" : "none";
-      heading.textContent = creating ? "Create your account" : "Welcome back";
-      submit.textContent = creating ? "Create account" : "Sign in";
-      password.autocomplete = creating ? "new-password" : "current-password";
-      msg.textContent = creating
-        ? "Use an email you can open to verify your account."
-        : "";
+    function openLogin(message = "") {
+      loginScreen.hidden = false;
+      registerScreen.hidden = true;
+      loginMessage.textContent = message;
     }
 
-    create.addEventListener("click", () => setMode("up"));
-    signIn.addEventListener("click", () => setMode("in"));
+    function openRegister() {
+      loginScreen.hidden = true;
+      registerScreen.hidden = false;
+      registerMessage.textContent = "Use an email you can open to verify your account.";
+    }
 
-    setMode("in");
+    function setupPasswordToggle(inputId, buttonId) {
+      const input = document.getElementById(inputId);
+      const button = document.getElementById(buttonId);
 
-    form.addEventListener("submit", async e => {
+      button.addEventListener("click", () => {
+        const showing = input.type === "text";
+        input.type = showing ? "password" : "text";
+        button.textContent = showing ? "👁" : "🙈";
+        button.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+      });
+    }
+
+    setupPasswordToggle("welcomeLoginPassword", "welcomeLoginToggle");
+    setupPasswordToggle("welcomeRegisterPassword", "welcomeRegisterToggle");
+
+    document.getElementById("welcomeOpenCreate").addEventListener("click", openRegister);
+    document.getElementById("welcomeBackToLogin").addEventListener("click", () => openLogin());
+
+    loginForm.addEventListener("submit", async e => {
       e.preventDefault();
-      const email = document.getElementById("welcomeEmail").value.trim();
-      const password = document.getElementById("welcomePassword").value;
-      msg.textContent = "Please wait…";
+      const email = document.getElementById("welcomeLoginEmail").value.trim();
+      const password = document.getElementById("welcomeLoginPassword").value;
+
+      loginMessage.textContent = "Please wait…";
+
       try {
-        if (mode === "up") {
-          const credential = await createUserWithEmailAndPassword(auth, email, password);
-          await sendEmailVerification(credential.user);
+        const credential = await signInWithEmailAndPassword(auth, email, password);
+
+        if (!credential.user.emailVerified) {
           await signOut(auth);
-          mode = "in";
-          heading.textContent = "Check your email";
-          msg.textContent = "Verification email sent to " + email + ". Verify it, then sign in.";
-          form.querySelector('button[type="submit"]').textContent = "Sign in";
-        } else {
-          const credential = await signInWithEmailAndPassword(auth, email, password);
-          if (!credential.user.emailVerified) {
-            await signOut(auth);
-            msg.textContent = "Please verify your email first, then sign in again.";
-            return;
-          }
+          loginMessage.textContent = "Please verify your email first, then sign in again.";
         }
       } catch (error) {
-        msg.textContent = error.message || "Authentication failed. Please try again.";
+        loginMessage.textContent = error.message || "Sign-in failed. Please try again.";
+      }
+    });
+
+    registerForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = document.getElementById("welcomeRegisterEmail").value.trim();
+      const password = document.getElementById("welcomeRegisterPassword").value;
+
+      registerMessage.textContent = "Creating your account…";
+
+      try {
+        const credential = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(credential.user);
+        await signOut(auth);
+        registerForm.reset();
+        openLogin("Verification email sent to " + email + ". Verify it, then sign in.");
+      } catch (error) {
+        registerMessage.textContent = error.message || "Account creation failed. Please try again.";
       }
     });
 
     document.getElementById("welcomeGoogle").addEventListener("click", async () => {
-      msg.textContent = "Opening Google sign-in…";
+      loginMessage.textContent = "Opening Google sign-in…";
+
       try {
         const result = await signInWithPopup(auth, new GoogleAuthProvider());
         if (result.user) showApp();
       } catch (error) {
-        msg.textContent = (error.code || "Google error") + ": " + (error.message || "Please try again.");
+        loginMessage.textContent = (error.code || "Google error") + ": " + (error.message || "Please try again.");
       }
     });
   }
