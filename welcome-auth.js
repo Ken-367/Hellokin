@@ -42,6 +42,17 @@ const auth = getAuth(app);
 const welcome = document.getElementById("hkWelcome");
 const appParts = [...document.querySelectorAll("body > header, body > main, body > nav, body > #settings, body > #chatDlg, body > footer, body > #hkSplash")];
 
+window.hkMainAuth = {
+  async signOut() {
+    await signOut(auth);
+    if (welcome) {
+      welcome.hidden = false;
+      appParts.forEach(el => el.hidden = true);
+    }
+  }
+};
+
+
 if (welcome) {
   const showWelcome = () => {
     welcome.hidden = false;
@@ -147,10 +158,4 @@ if (welcome) {
     else showWelcome();
   });
 
-  window.hkMainAuth = {
-    async signOut() {
-      await signOut(auth);
-      showWelcome();
-    }
-  };
 }
