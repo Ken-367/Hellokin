@@ -76,43 +76,30 @@ if (welcome) {
         <button id="welcomeGoogle" type="button" style="width:100%;margin-top:10px;background:#fff;color:#14213d;border:1px solid #dbe3ec">Continue with Google</button>
         <p class="muted" style="text-align:center;margin-top:16px">New accounts must verify their email before signing in.</p>
       </div>`;
-    const form = document.getElementById("welcomeForm");
-    const heading = document.getElementById("welcomeHeading");
-    const msg = document.getElementById("welcomeMessage");
-  document.getElementById("welcomePasswordToggle").addEventListener("click", () => {
-    const password = document.getElementById("welcomePassword");
-    const showing = password.type === "password";
-    password.type = showing ? "text" : "password";
-    const button = document.getElementById("welcomePasswordToggle");
-    button.textContent = showing ? "🙈" : "👁";
-    button.setAttribute("aria-label", showing ? "Hide password" : "Show password");
-    button.title = showing ? "Hide password" : "Show password";
-  });
-
-    const create = document.getElementById("welcomeCreate");
+        const create = document.getElementById("welcomeCreate");
     const signIn = document.getElementById("welcomeSignIn");
-    signIn.style.display = "none";
+    const submit = form.querySelector('button[type="submit"]');
+    const password = document.getElementById("welcomePassword");
     let mode = "in";
 
-    document.getElementById("welcomeSignIn").addEventListener("click", () => {
-      create.style.display = "block";
-      signIn.style.display = "none";
-      mode = "in";
-      heading.textContent = "Welcome back";
-      form.querySelector('button[type="submit"]').textContent = "Sign in";
-      msg.textContent = "";
-      document.getElementById("welcomePassword").autocomplete = "current-password";
-    });
+    function setMode(newMode) {
+      mode = newMode;
+      const creating = mode === "up";
 
-    create.addEventListener("click", () => {
-      create.style.display = "none";
-      signIn.style.display = "block";
-      mode = "up";
-      heading.textContent = "Create your account";
-      form.querySelector('button[type="submit"]').textContent = "Create account";
-      msg.textContent = "Use an email you can open to verify your account.";
-      document.getElementById("welcomePassword").autocomplete = "new-password";
-    });
+      create.style.display = creating ? "none" : "block";
+      signIn.style.display = creating ? "block" : "none";
+      heading.textContent = creating ? "Create your account" : "Welcome back";
+      submit.textContent = creating ? "Create account" : "Sign in";
+      password.autocomplete = creating ? "new-password" : "current-password";
+      msg.textContent = creating
+        ? "Use an email you can open to verify your account."
+        : "";
+    }
+
+    create.addEventListener("click", () => setMode("up"));
+    signIn.addEventListener("click", () => setMode("in"));
+
+    setMode("in");
 
     form.addEventListener("submit", async e => {
       e.preventDefault();
