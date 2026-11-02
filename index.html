@@ -504,11 +504,14 @@ nav button {
   });
 
   document.getElementById('hellokinSignOut').addEventListener('click', async () => {
-    if (window.hkChat && window.hkChat.signOut) {
-      await window.hkChat.signOut();
-      settingsMessage.textContent = 'Signed out.';
-    } else {
-      settingsMessage.textContent = 'Open Chat and sign in first.';
+    try {
+      if (window.hkMainAuth && window.hkMainAuth.signOut) {
+        await window.hkMainAuth.signOut();
+      } else {
+        throw new Error('Main authentication is not ready. Please reload.');
+      }
+    } catch (error) {
+      settingsMessage.textContent = error.message || 'Sign out failed.';
     }
   });
 
