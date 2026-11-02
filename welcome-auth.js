@@ -97,13 +97,13 @@ if (welcome) {
           <p class="muted" style="text-align:center">Join the community.</p>
           <h2>Create your account</h2>
 
-          <form id="welcomeRegisterForm">
+          <form id="welcomeRegisterForm" autocomplete="off">
             <label for="welcomeRegisterEmail">Email</label>
-            <input id="welcomeRegisterEmail" type="email" autocomplete="email" required style="width:100%;box-sizing:border-box">
+            <input id="welcomeRegisterEmail" name="hellokin-new-email" type="email" autocomplete="section-hk-register email" required style="width:100%;box-sizing:border-box">
 
             <label for="welcomeRegisterPassword">Create password (at least 6 characters)</label>
             <div class="hk-password-row">
-              <input id="welcomeRegisterPassword" type="password" autocomplete="new-password" minlength="6" required style="flex:1;min-width:0">
+              <input id="welcomeRegisterPassword" name="hellokin-new-password" type="password" autocomplete="section-hk-register new-password" minlength="6" required style="flex:1;min-width:0">
               <button class="hk-password-toggle" id="welcomeRegisterToggle" type="button" aria-label="Show password">👁</button>
             </div>
 
