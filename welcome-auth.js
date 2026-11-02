@@ -87,7 +87,11 @@ if (welcome) {
         <button id="welcomeGoogle" type="button" style="width:100%;margin-top:10px;background:#fff;color:#14213d;border:1px solid #dbe3ec">Continue with Google</button>
         <p class="muted" style="text-align:center;margin-top:16px">New accounts must verify their email before signing in.</p>
       </div>`;
-        const create = document.getElementById("welcomeCreate");
+
+    const form = document.getElementById("welcomeForm");
+    const heading = document.getElementById("welcomeHeading");
+    const msg = document.getElementById("welcomeMessage");
+    const create = document.getElementById("welcomeCreate");
     const signIn = document.getElementById("welcomeSignIn");
     const submit = form.querySelector('button[type="submit"]');
     const password = document.getElementById("welcomePassword");
