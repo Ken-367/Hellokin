@@ -414,7 +414,16 @@ nav button {
 
   <button id="saveSettings" style="width:100%">Save settings</button>
   <button id="hellokinChangeUsername" style="width:100%;margin-top:10px">Change username</button>
-  <button id="hellokinSignOut" type="button" style="width:100%;margin-top:10px">Sign out</button>
+  <hr>
+  <h3>Account password</h3>
+  <p class="muted">Create a separate Hellokin password for direct Gmail sign-in.</p>
+  <label for="hellokinNewPassword">New Hellokin password</label>
+  <div style="display:flex;gap:8px;align-items:center">
+    <input id="hellokinNewPassword" type="password" minlength="6" autocomplete="new-password" placeholder="At least 6 characters" style="flex:1;min-width:0">
+    <button id="hellokinPasswordToggle" type="button">👁</button>
+  </div>
+  <button id="hellokinSetPassword" type="button" style="width:100%;margin-top:10px">Set Hellokin Password</button>
+  <button id="hellokinSignOut" type="button"  style="width:100%;margin-top:10px">Sign out</button>
   <p id="settingsMessage" class="muted" aria-live="polite"></p>
 </section>
 
@@ -500,6 +509,42 @@ nav button {
       window.hkChat.changeUsername();
     } else {
       settingsMessage.textContent = 'Open Chat and sign in first, then try again.';
+    }
+  });
+
+  const hellokinPassword = document.getElementById('hellokinNewPassword');
+  const passwordToggle = document.getElementById('hellokinPasswordToggle');
+
+  passwordToggle.addEventListener('click', () => {
+    const showing = hellokinPassword.type === 'text';
+    hellokinPassword.type = showing ? 'password' : 'text';
+    passwordToggle.textContent = showing ? '👁' : '🙈';
+  });
+
+  document.getElementById('hellokinSetPassword').addEventListener('click', async () => {
+    const password = hellokinPassword.value;
+    if (password.length < 6) {
+      settingsMessage.textContent = 'Use at least 6 characters.';
+      return;
+    }
+
+    settingsMessage.textContent = 'Setting up your password...';
+
+    try {
+      if (!window.hkMainAuth?.setPassword) {
+        throw new Error('Authentication is not ready. Reload Hellokin and try again.');
+      }
+      await window.hkMainAuth.setPassword(password);
+      hellokinPassword.value = '';
+      settingsMessage.textContent = 'Hellokin password created. You can now sign in with Gmail and this password.';
+    } catch (error) {
+      const messages = {
+        'auth/operation-not-allowed': 'Email/password sign-in is not enabled in Firebase.',
+        'auth/requires-recent-login': 'Sign in with Google again, then try setting your password.',
+        'auth/email-already-in-use': 'This email already has a password account.',
+        'auth/provider-already-linked': 'A password is already linked to this account.'
+      };
+      settingsMessage.textContent = messages[error.code] || error.message || 'Could not set password.';
     }
   });
 

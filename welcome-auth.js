@@ -7,7 +7,9 @@ import {
   sendEmailVerification,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  EmailAuthProvider,
+  linkWithCredential
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { firebaseConfig } from "./firebase-config.js";
 
@@ -60,6 +62,24 @@ const welcome = document.getElementById("hkWelcome");
 const appParts = [...document.querySelectorAll("body > header, body > main, body > nav, body > #settings, body > #chatDlg, body > footer, body > #hkSplash")];
 
 window.hkMainAuth = {
+  async setPassword(password) {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Please sign in first.");
+    if (!user.email) throw new Error("This account has no email address.");
+
+    if (user.providerData.some(provider => provider.providerId === "password")) {
+      throw new Error("This account already has a Hellokin password. Use password sign-in or password recovery.");
+    }
+
+    if (password.length < 6) {
+      throw new Error("Your password must contain at least 6 characters.");
+    }
+
+    const credential = EmailAuthProvider.credential(user.email, password);
+    await linkWithCredential(user, credential);
+    return true;
+  },
+
   async signOut() {
     await signOut(auth);
     if (welcome) {
