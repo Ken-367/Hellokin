@@ -8,7 +8,7 @@ import {
   signOut,
   reload,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
   EmailAuthProvider,
   linkWithCredential
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -238,8 +238,7 @@ if (welcome) {
       loginMessage.textContent = "Opening Google sign-in…";
 
       try {
-        const result = await signInWithPopup(auth, new GoogleAuthProvider());
-        if (result.user) showApp();
+        await signInWithRedirect(auth, new GoogleAuthProvider());
       } catch (error) {
         console.error("Hellokin Google sign-in:", error.code || error.message); loginMessage.textContent = error.code === "auth/popup-closed-by-user" ? "Google sign-in was cancelled." : error.code === "auth/unauthorized-domain" ? "This website is not authorized for Firebase sign-in. Check Firebase Authentication settings." : error.code === "auth/network-request-failed" ? "Connection failed. Check your internet and try again." : "Google sign-in failed. Please try again.";
       }
