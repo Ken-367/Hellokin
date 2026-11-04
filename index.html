@@ -204,29 +204,29 @@ nav button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  background: #ffffff;
-  color: #14213d;
+  gap: 16px;
+  background: #14213d;
+  color: #ffffff;
   font-family: Arial, sans-serif;
   transition: opacity .3s ease;
 }
 #hkSplash .hk-logo {
-  width: 112px;
-  height: 112px;
-  object-fit: contain;
-  border-radius: 24px;
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: #ffffff;
 }
 #hkSplash .hk-spinner {
-  width: 34px;
-  height: 34px;
-  border: 4px solid #dbeafe;
-  border-top-color: #2563eb;
+  width: 38px;
+  height: 38px;
+  border: 4px solid #ffffff35;
+  border-top-color: #60a5fa;
   border-radius: 50%;
   animation: hkSpin .8s linear infinite;
 }
 #hkSplash .hk-loading-text {
   font-size: 14px;
-  color: #64748b;
+  color: #dbeafe;
 }
 #hkSplash.hk-hidden {
   opacity: 0;
@@ -252,7 +252,7 @@ nav button {
 
 
 <div id="hkSplash" role="status" aria-label="Loading Hellokin">
-  <img class="hk-logo" src="./hellokin-icons/icons/icon-512.png" alt="Hellokin app icon">
+  <div class="hk-logo">Hellokin</div>
   <div class="hk-spinner" aria-hidden="true"></div>
   <div class="hk-loading-text">Getting things ready...</div>
 </div>
@@ -264,17 +264,28 @@ nav button {
 
   <main>
 <section class="card" id="stories">
-      <h2>Stories</h2>
-      <div id="storyRail" class="stories" style="display:flex;gap:12px;overflow-x:auto;padding:8px 2px 14px"></div>
-<input id="storyFile" type="file" accept="image/*,video/*" hidden>
-<p id="storyStatus" class="muted" aria-live="polite"></p>
-        <button type="button" class="story" style="min-width:82px;min-height:112px;border-radius:18px;border:1px solid var(--line);background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px"><span style="font-size:30px">＋</span><small>Create</small></button>
-        <div class="story" style="min-width:82px;min-height:112px;border-radius:18px;background:linear-gradient(160deg,#8bb7ff,#e4ecff);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#14213d"><span style="font-size:30px">🌍</span><small>Discover</small></div>
-        <div class="story" style="min-width:82px;min-height:112px;border-radius:18px;background:linear-gradient(160deg,#ffc6d9,#fff0f5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#51233a"><span style="font-size:30px">🎉</span><small>Moments</small></div>
-        <div class="story" style="min-width:82px;min-height:112px;border-radius:18px;background:linear-gradient(160deg,#b9f3d2,#effff5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#17442e"><span style="font-size:30px">🎵</span><small>Trending</small></div>
-      </div>
-      <p class="muted">Story sharing will need its own upload and storage setup.</p>
-    </section>
+  <h2>Stories</h2>
+  <div id="storyRail" class="stories" style="display:flex;flex-direction:row;flex-wrap:nowrap;gap:12px;overflow-x:auto;overflow-y:hidden;padding:8px 2px 14px;align-items:flex-start;scrollbar-width:none;-webkit-overflow-scrolling:touch">
+    <button id="addStoryButton" type="button" class="story" style="flex:0 0 82px;width:82px;min-width:82px;min-height:112px;border-radius:18px;border:1px solid var(--line);background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+      <span style="font-size:30px">＋</span>
+      <small>Add Story</small>
+    </button>
+    <button id="discoverStories" type="button" class="story" style="flex:0 0 82px;width:82px;min-width:82px;min-height:112px;border:0;border-radius:18px;background:linear-gradient(160deg,#8bb7ff,#e4ecff);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#14213d">
+      <span style="font-size:30px">🌍</span>
+      <small>Discover</small>
+    </button>
+    <button id="momentsStories" type="button" class="story" style="flex:0 0 82px;width:82px;min-width:82px;min-height:112px;border:0;border-radius:18px;background:linear-gradient(160deg,#ffc6d9,#fff0f5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#51233a">
+      <span style="font-size:30px">🎉</span>
+      <small>Moments</small>
+    </button>
+    <button id="trendingStories" type="button" class="story" style="flex:0 0 82px;width:82px;min-width:82px;min-height:112px;border:0;border-radius:18px;background:linear-gradient(160deg,#b9f3d2,#effff5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#17442e">
+      <span style="font-size:30px">🎵</span>
+      <small>Trending</small>
+    </button>
+  </div>
+  <input id="storyFile" type="file" accept="image/*,video/*" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none" tabindex="-1" aria-label="Choose a photo or video for your Story">
+  <p id="storyStatus" class="muted" aria-live="polite"></p>
+</section>
 
     <section class="card" id="home">
       <div style="display:flex;align-items:center;gap:12px">
@@ -320,7 +331,7 @@ nav button {
   <button data-screen="home" onclick="showScreen('home')">🏠 Home</button>
   <button data-screen="reels" onclick="showScreen('reels')">🎬 Reels</button>
   <button data-screen="people" onclick="showScreen('people')">👥 People</button>
-  <button onclick="window.hkChat ? window.hkChat.open() : document.getElementById('chatDlg').showModal()">💬 Chat</button>
+  <button onclick="window.hkChat ? window.hkChat.open() : document.getElementById('chatDlg').hidden = false">💬 Chat</button>
   <button data-screen="profile" onclick="showScreen('profile')">👤 Profile</button>
   <button data-screen="settings" onclick="showScreen('settings')">⚙️ Settings</button>
 </nav>
@@ -608,10 +619,10 @@ nav button {
 </script>
 <footer>© 2026 Hellokin</footer>
 
-  <dialog id="chatDlg">
+  <section id="chatDlg" hidden aria-label="Chat">
     
     <div id="chatBody"></div>
-  </dialog>
+  </section>
 
   <script>
     const textBox = document.getElementById("postText");
@@ -740,13 +751,188 @@ nav button {
 })();
 </script>
 
-<script type="module" src="./welcome-auth.js"></script>
+<script type="module" src="./welcome-auth.js?v=authcheck1"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").catch(console.error);
   });
 }
+</script>
+
+<script>
+(() => {
+
+  const addButton = document.getElementById("addStoryButton");
+  const storyFile = document.getElementById("storyFile");
+  const rail = document.getElementById("storyRail");
+  const status = document.getElementById("storyStatus");
+  const discover = document.getElementById("discoverStories");
+  const moments = document.getElementById("momentsStories");
+  const trending = document.getElementById("trendingStories");
+
+  if (!addButton || !storyFile || !rail || !status ||
+      !discover || !moments || !trending) return;
+
+  let allStories = [];
+  let activeMode = "discover";
+  let stopStories = null;
+
+  function openStory(story) {
+    const viewer = document.createElement("div");
+    viewer.style.cssText =
+      "position:fixed;inset:0;z-index:100001;background:#080b14;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px";
+
+    const close = document.createElement("button");
+    close.textContent = "✕ Close";
+    close.style.cssText =
+      "position:absolute;top:20px;right:16px;z-index:2;padding:12px;border:0;border-radius:20px;background:#fff;color:#111;font-weight:bold";
+
+    const name = document.createElement("p");
+    name.textContent = story.username || "Hellokin member";
+    name.style.cssText = "color:white;font-size:16px";
+
+    const media = story.mediaType === "video"
+      ? document.createElement("video")
+      : document.createElement("img");
+
+    media.src = story.mediaURL;
+    media.style.cssText =
+      "max-width:100%;max-height:78vh;object-fit:contain;border-radius:12px";
+
+    if (story.mediaType === "video") {
+      media.controls = true;
+      media.autoplay = true;
+      media.playsInline = true;
+    }
+
+    close.addEventListener("click", () => {
+      if (media.tagName === "VIDEO") media.pause();
+      viewer.remove();
+    });
+
+    viewer.addEventListener("click", event => {
+      if (event.target === viewer) close.click();
+    });
+
+    viewer.append(close, name, media);
+    document.body.appendChild(viewer);
+  }
+
+  function renderStories() {
+    rail.replaceChildren(addButton, discover, moments, trending);
+
+    let selected = allStories;
+
+    if (activeMode === "moments") {
+      selected = allStories.filter(story =>
+        Date.now() - Number(story.createdAt) <= 12 * 60 * 60 * 1000
+      );
+    }
+
+    if (activeMode === "trending") {
+      selected = [...allStories]
+        .sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
+        .slice(0, 10);
+    }
+
+    if (!selected.length) {
+      status.textContent = "No Stories available in this section yet.";
+    } else {
+      status.textContent = "";
+    }
+
+    selected.forEach(story => {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.style.cssText =
+        "min-width:82px;min-height:112px;width:82px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--soft);padding:4px;display:flex;flex-direction:column;align-items:center;gap:5px";
+
+      const media = story.mediaType === "video"
+        ? document.createElement("video")
+        : document.createElement("img");
+
+      media.src = story.mediaURL;
+      media.alt = "Story by " + (story.username || "Hellokin member");
+      media.style.cssText =
+        "width:100%;height:78px;object-fit:cover;border-radius:12px";
+
+      if (story.mediaType === "video") {
+        media.muted = true;
+        media.playsInline = true;
+        media.preload = "metadata";
+      }
+
+      const name = document.createElement("small");
+      name.textContent = story.username || "Hellokin member";
+
+      card.append(media, name);
+      card.addEventListener("click", () => openStory(story));
+      rail.appendChild(card);
+    });
+  }
+
+  addButton.addEventListener("click", () => storyFile.click());
+
+  storyFile.addEventListener("change", async () => {
+    const file = storyFile.files && storyFile.files[0];
+    if (!file) return;
+
+    addButton.disabled = true;
+    status.textContent = "Uploading your Story...";
+
+    try {
+      if (!window.hkChat?.uploadStory) {
+        throw new Error("Hellokin is still getting ready. Please reload.");
+      }
+
+      await window.hkChat.uploadStory(file);
+      status.textContent = "Your Story was shared successfully!";
+    } catch (error) {
+      status.textContent = error.message || "Story upload failed.";
+    } finally {
+      addButton.disabled = false;
+      storyFile.value = "";
+    }
+  });
+
+  discover.addEventListener("click", () => {
+    activeMode = "discover";
+    renderStories();
+  });
+
+  moments.addEventListener("click", () => {
+    activeMode = "moments";
+    renderStories();
+  });
+
+  trending.addEventListener("click", () => {
+    activeMode = "trending";
+    renderStories();
+  });
+
+  function startStories() {
+    if (stopStories || !window.hkChat?.watchStories) return;
+
+    try {
+      stopStories = window.hkChat.watchStories((stories, error) => {
+        if (error) {
+          status.textContent = "Could not load Stories: " + error.message;
+          return;
+        }
+
+        allStories = stories || [];
+        renderStories();
+      });
+    } catch (error) {
+      status.textContent = error.message || "Stories are not available yet.";
+    }
+  }
+
+  window.addEventListener("hellokin-profile", startStories);
+  startStories();
+
+})();
 </script>
 </body>
 </html>
