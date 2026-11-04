@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   sendEmailVerification,
   signOut,
+  reload,
   GoogleAuthProvider,
   signInWithPopup,
   EmailAuthProvider,
@@ -106,9 +107,9 @@ if (welcome) {
 
   function render(message = "") {
     welcome.innerHTML = `
-      <div style="min-height:100vh;display:grid;place-items:center;padding:20px;box-sizing:border-box">
+      <div style="min-height:100dvh;width:100%;display:flex;align-items:stretch;justify-content:center;padding:0;box-sizing:border-box">
 
-        <section id="welcomeLogin" class="card" style="width:100%;max-width:420px;padding:24px;box-sizing:border-box">
+        <section id="welcomeLogin" style="width:100%;min-height:100dvh;padding:32px 22px;box-sizing:border-box;background:var(--bg,#eef2f6);border-radius:0;box-shadow:none;display:flex;flex-direction:column;justify-content:center">
           <h1 style="text-align:center">Hellokin</h1>
           <p class="muted" style="text-align:center">Connect, share, and discover.</p>
           <h2>Welcome back</h2>
@@ -131,7 +132,7 @@ if (welcome) {
           <button id="welcomeGoogle" type="button" style="width:100%;margin-top:10px;background:#fff;color:#14213d;border:1px solid #dbe3ec;display:flex;align-items:center;justify-content:center;gap:10px"><span class="hk-google-g">G</span>Continue with Google</button>
         </section>
 
-        <section id="welcomeRegister" class="card" hidden style="width:100%;max-width:420px;padding:24px;box-sizing:border-box">
+        <section id="welcomeRegister" hidden style="width:100%;min-height:100dvh;padding:32px 22px;box-sizing:border-box;background:var(--bg,#eef2f6);border-radius:0;box-shadow:none;display:flex;flex-direction:column;justify-content:center">
           <h1 style="text-align:center">Hellokin</h1>
           <p class="muted" style="text-align:center">Join the community.</p>
           <h2>Create your account</h2>
@@ -201,13 +202,17 @@ if (welcome) {
 
       try {
         const credential = await signInWithEmailAndPassword(auth, email, password);
-
+        await reload(credential.user);
         if (!credential.user.emailVerified) {
+          const verificationStatus = credential.user.emailVerified;
+          const accountEmail = credential.user.email;
           await signOut(auth);
-          loginMessage.textContent = "Please verify your email first, then sign in again.";
+          loginMessage.textContent = "Firebase status: " + accountEmail + " | emailVerified: " + verificationStatus;
+        } else {
+          showApp();
         }
       } catch (error) {
-        loginMessage.textContent = error.message || "Sign-in failed. Please try again.";
+        console.error("Hellokin sign-in:", error.code || error.message); loginMessage.textContent = error.code === "auth/network-request-failed" ? "Connection failed. Check your internet and try again." : error.code === "auth/invalid-credential" ? "Your email or password is incorrect. Please try again." : error.code === "auth/too-many-requests" ? "Too many attempts. Please wait and try again." : "Sign-in failed. Please check your details and try again.";
       }
     });
 
@@ -225,7 +230,7 @@ if (welcome) {
         registerForm.reset();
         openLogin("Verification email sent to " + email + ". Verify it, then sign in.");
       } catch (error) {
-        registerMessage.textContent = error.message || "Account creation failed. Please try again.";
+        console.error("Hellokin registration:", error.code || error.message); registerMessage.textContent = error.code === "auth/email-already-in-use" ? "This email already has an account. Please sign in." : error.code === "auth/weak-password" ? "Choose a stronger password with at least 6 characters." : error.code === "auth/network-request-failed" ? "Connection failed. Check your internet and try again." : "Account creation failed. Please check your details and try again.";
       }
     });
 
@@ -236,7 +241,7 @@ if (welcome) {
         const result = await signInWithPopup(auth, new GoogleAuthProvider());
         if (result.user) showApp();
       } catch (error) {
-        loginMessage.textContent = (error.code || "Google error") + ": " + (error.message || "Please try again.");
+        console.error("Hellokin Google sign-in:", error.code || error.message); loginMessage.textContent = error.code === "auth/popup-closed-by-user" ? "Google sign-in was cancelled." : error.code === "auth/unauthorized-domain" ? "This website is not authorized for Firebase sign-in. Check Firebase Authentication settings." : error.code === "auth/network-request-failed" ? "Connection failed. Check your internet and try again." : "Google sign-in failed. Please try again.";
       }
     });
   }
@@ -244,9 +249,31 @@ if (welcome) {
   render();
   showWelcome();
 
-  onAuthStateChanged(auth, user => {
-    if (user && user.emailVerified) showApp();
-    else showWelcome();
+  onAuthStateChanged(auth, async user => {
+    if (!user) {
+      showWelcome();
+      return;
+    }
+
+    try {
+      await reload(user);
+      console.log("HELL0KIN EMAIL STATUS:", user.email, user.emailVerified, user.providerData.map(p => p.providerId));
+      if (auth.currentUser?.uid !== user.uid) return;
+
+      const isPasswordUser = user.providerData.some(
+        provider => provider.providerId === "password"
+      );
+
+      if (!isPasswordUser || user.emailVerified) {
+        showApp();
+      } else {
+        await signOut(auth);
+        showWelcome();
+      }
+    } catch (error) {
+      console.error("Hellokin auth refresh:", error.code || error.message);
+      showWelcome();
+    }
   });
 
 }
