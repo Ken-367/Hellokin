@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ken-367.github.io/Hellokin/sitemap.xml
