@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth,
+  getRedirectResult,
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -247,6 +248,20 @@ if (welcome) {
 
   render();
   showWelcome();
+
+  getRedirectResult(auth).catch(error => {
+    console.error("Hellokin Google redirect:", error.code || error.message);
+
+    const message = document.getElementById("welcomeLoginMessage");
+    if (message) {
+      message.textContent =
+        error.code === "auth/unauthorized-domain"
+          ? "This website is not authorized for Firebase sign-in."
+          : error.code === "auth/network-request-failed"
+          ? "Connection failed. Check your internet and try again."
+          : "Google sign-in could not be completed. Please try again.";
+    }
+  });
 
   onAuthStateChanged(auth, async user => {
     if (!user) {
