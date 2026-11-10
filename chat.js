@@ -351,6 +351,119 @@ window.hkChat = {
     return story;
   },
 
+
+  async publishPost({text = "", mediaFile = null, musicFile = null} = {}) {
+    if (!me || !auth?.currentUser) {
+      throw new Error("Sign in before publishing.");
+    }
+
+    text = String(text).trim();
+    if (!text && !mediaFile && !musicFile) {
+      throw new Error("Write something or choose media first.");
+    }
+
+    async function uploadPostFile(file, kind) {
+      if (!file) return null;
+
+      const limits = {
+        image: 10 * 1024 * 1024,
+        video: 50 * 1024 * 1024,
+        audio: 20 * 1024 * 1024
+      };
+
+      if (kind === "image" && !file.type.startsWith("image/")) {
+        throw new Error("Choose an image file.");
+      }
+      if (kind === "video" && !file.type.startsWith("video/")) {
+        throw new Error("Choose a video file.");
+      }
+      if (kind === "audio" && !file.type.startsWith("audio/")) {
+        throw new Error("Choose an audio file for music.");
+      }
+      if (file.size > limits[kind]) {
+        throw new Error("That file is too large for a Hellokin post.");
+      }
+      if (!cloudinary.cloudName || !cloudinary.uploadPreset) {
+        throw new Error("Cloudinary settings are incomplete.");
+      }
+
+      const form = new FormData();
+      form.append("file", file);
+      form.append("upload_preset", cloudinary.uploadPreset);
+
+      const response = await fetch(
+        "https://api.cloudinary.com/v1_1/" +
+          cloudinary.cloudName + "/auto/upload",
+        {method: "POST", body: form}
+      );
+
+      const result = await response.json();
+      if (!response.ok || !result.secure_url) {
+        throw new Error(result.error?.message || "Media upload failed.");
+      }
+      return result.secure_url;
+    }
+
+    const mediaType = mediaFile
+      ? (mediaFile.type.startsWith("video/") ? "video" : "image")
+      : musicFile ? "music" : "text";
+
+    const mediaURL = mediaFile
+      ? await uploadPostFile(mediaFile, mediaType)
+      : "";
+
+    const musicURL = musicFile
+      ? await uploadPostFile(musicFile, "audio")
+      : "";
+
+    const createdAt = Date.now();
+    const post = {
+      uid: me.uid,
+      username: me.username || "Hellokin member",
+      text,
+      mediaType,
+      mediaURL,
+      musicURL,
+      musicName: musicFile ? musicFile.name : "",
+      createdAt
+    };
+
+    const saved = await addDoc(collection(db, "posts"), post);
+
+    let storyError = "";
+    if (mediaFile && (mediaType === "image" || mediaType === "video")) {
+      try {
+        await addDoc(collection(db, "stories"), {
+          uid: me.uid,
+          username: me.username || "Hellokin member",
+          mediaURL,
+          mediaType,
+          createdAt,
+          expiresAt: createdAt + 24 * 60 * 60 * 1000
+        });
+      } catch (error) {
+        storyError = error.message || "Story could not be created.";
+      }
+    }
+
+    return {...post, id: saved.id, storyError};
+  },
+
+  watchPosts(onChange) {
+    if (!db || !auth?.currentUser) {
+      throw new Error("Sign in to view posts.");
+    }
+
+    return onSnapshot(
+      query(collection(db, "posts"), orderBy("createdAt", "desc")),
+      snapshot => onChange(
+        snapshot.docs.map(d => ({id: d.id, ...d.data()})),
+        null
+      ),
+      error => onChange([], error)
+    );
+  },
+
   async signOut() { if (auth) await signOut(auth); },
   async saveProfilePicture(file) {
     if (!me || !auth?.currentUser) throw new Error('Sign in to Chat first.');

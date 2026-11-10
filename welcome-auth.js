@@ -102,7 +102,7 @@ if (welcome) {
   const showApp = () => {
     document.body.classList.remove("hk-auth-screen");
     welcome.hidden = true;
-    appParts.forEach(el => el.hidden = false);
+    appParts.forEach(el => el.hidden = (el.id === "chatDlg"));
     if (typeof window.showScreen === "function") window.showScreen("home");
 
   };

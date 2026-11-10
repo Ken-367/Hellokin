@@ -285,25 +285,27 @@ nav button {
         <textarea id="postText" rows="2" placeholder="What's on your mind?"
           style="flex:1;min-width:0;box-sizing:border-box;border-radius:20px;padding:12px;resize:vertical"></textarea>
       </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button type="button" id="choosePostMedia">📷 Photo / Video</button>
+        <button type="button" id="choosePostMusic">🎵 Add music</button>
+      </div>
+      <input id="postMediaFile" type="file" accept="image/*,video/*" hidden>
+      <input id="postMusicFile" type="file" accept="audio/*" hidden>
+      <p id="postMediaName" class="muted"></p>
+      <p id="postMusicName" class="muted"></p>
       <button id="postButton" style="width:100%;margin-top:12px">Share post</button>
       <p class="muted" id="message" aria-live="polite"></p>
+      <section class="card" id="feed">
+        <h2>Home feed</h2>
+        <div id="posts"></div>
+      </section>
     </section>
 
     <section class="card" id="reels">
       <h2>🎬 Reels</h2>
-      <div class="video-box">
-        <p>Watch and share videos on Hellokin</p>
-        <p class="muted" style="color:#dbe3ec">
-          Direct video uploads and a shared Reels feed require cloud storage.
-          We'll connect that next.
-        </p>
-      </div>
+      <div id="reelsPosts"></div>
     </section>
 
-    <section class="card" id="feed">
-      <h2>Home feed</h2>
-      <div id="posts"></div>
-    </section>
 
     <section class="card" id="people">
       <h2>👥 People & Connections</h2>
@@ -616,93 +618,173 @@ nav button {
       settingsMessage.textContent = 'Settings saved on this device. Phone number is not verified yet.';
       applyTheme(settings.theme);
     } catch {
-      settingsMessage.textContent = 'Could not save settings on this device.';
-    }
-  });
-</script>
-<footer>© 2026 Hellokin</footer>
 
-  <section id="chatDlg" hidden aria-label="Chat">
-    
-    <div id="chatBody"></div>
-  </section>
-
-  <script>
     const textBox = document.getElementById("postText");
     const postsBox = document.getElementById("posts");
+    const reelsBox = document.getElementById("reelsPosts");
     const message = document.getElementById("message");
-    let posts = [];
+    const mediaInput = document.getElementById("postMediaFile");
+    const musicInput = document.getElementById("postMusicFile");
+    let selectedMedia = null;
+    let selectedMusic = null;
+    let stopPosts = null;
 
-    try {
-      posts = JSON.parse(localStorage.getItem("hellokin-posts") || "[]");
-      if (!Array.isArray(posts)) posts = [];
-    } catch { posts = []; }
+    document.getElementById("choosePostMedia").addEventListener("click", () => mediaInput.click());
+    document.getElementById("choosePostMusic").addEventListener("click", () => musicInput.click());
 
-    function renderPosts() {
-      postsBox.replaceChildren();
-      if (!posts.length) {
-        postsBox.textContent = "No posts yet. Share the first one!";
-        return;
+    mediaInput.addEventListener("change", () => {
+      selectedMedia = mediaInput.files[0] || null;
+      document.getElementById("postMediaName").textContent =
+        selectedMedia ? "Selected: " + selectedMedia.name : "";
+    });
+
+    musicInput.addEventListener("change", () => {
+      selectedMusic = musicInput.files[0] || null;
+      document.getElementById("postMusicName").textContent =
+        selectedMusic ? "Music: " + selectedMusic.name : "";
+    });
+
+    function makePostCard(post) {
+      const article = document.createElement("article");
+      article.className = "post";
+
+      const author = document.createElement("strong");
+      author.textContent = "👤 " + (post.username || "Hellokin member");
+
+      const content = document.createElement("p");
+      content.textContent = post.text || "";
+
+      article.append(author);
+
+      if (post.text) article.append(content);
+
+      if (post.mediaURL && post.mediaType === "image") {
+        const img = document.createElement("img");
+        img.src = post.mediaURL;
+        img.alt = "Post image";
+        img.loading = "lazy";
+        img.style.cssText = "display:block;width:100%;max-height:480px;object-fit:contain;border-radius:12px";
+        article.append(img);
       }
-      posts.forEach(post => {
-        const article = document.createElement("article");
-        article.className = "post";
-        const author = document.createElement("strong");
-        author.textContent = "👤 Hellokin member";
-        const content = document.createElement("p");
-        content.textContent = post.text || "";
-        const date = document.createElement("small");
-        date.textContent = post.date || "";
-        const actions = document.createElement("div");
-        actions.className = "post-actions";
-        const like = document.createElement("button");
-        like.textContent = "👍 Like";
-        like.addEventListener("click", () => {
-          like.textContent = like.textContent === "👍 Like" ? "💙 Liked" : "👍 Like";
-        });
-        const comment = document.createElement("button");
-        comment.textContent = "💬 Comment";
-        comment.addEventListener("click", () => {
-          const reply = prompt("Write a comment:");
-          if (reply && reply.trim()) {
-            const p = document.createElement("p");
-            p.textContent = "💬 " + reply.trim();
-            article.appendChild(p);
-          }
-        });
-        actions.append(like, comment);
-        article.append(author, content, date, actions);
-        postsBox.appendChild(article);
-      });
+
+      if (post.mediaURL && post.mediaType === "video") {
+        const video = document.createElement("video");
+        video.src = post.mediaURL;
+        video.controls = true;
+        video.playsInline = true;
+        video.preload = "metadata";
+        article.append(video);
+      }
+
+      if (post.musicURL) {
+        const audio = document.createElement("audio");
+        audio.src = post.musicURL;
+        audio.controls = true;
+        audio.preload = "none";
+        audio.style.cssText = "display:block;width:100%;margin-top:10px";
+        article.append(audio);
+      }
+
+      const date = document.createElement("small");
+      date.textContent = post.createdAt
+        ? new Date(post.createdAt).toLocaleString()
+        : "";
+      article.append(date);
+
+      return article;
     }
 
-    document.getElementById("postButton").addEventListener("click", () => {
+    function renderPosts(posts) {
+      postsBox.replaceChildren();
+      reelsBox.replaceChildren();
+
+      if (!posts.length) {
+        postsBox.textContent = "No posts yet. Share the first one!";
+      } else {
+        posts.forEach(post => postsBox.append(makePostCard(post)));
+      }
+
+      const reels = posts.filter(post =>
+        post.mediaType === "video" || post.mediaType === "music"
+      );
+
+      if (!reels.length) {
+        reelsBox.textContent = "No Reels yet. Share a video or a post with music!";
+      } else {
+        reels.forEach(post => reelsBox.append(makePostCard(post)));
+      }
+    }
+
+    async function sharePost() {
+      const button = document.getElementById("postButton");
       const text = textBox.value.trim();
-      if (!text) {
-        message.textContent = "Please write something first.";
+
+      if (!text && !selectedMedia && !selectedMusic) {
+        message.textContent = "Write something or choose media first.";
         return;
       }
-      posts.unshift({ text, date: new Date().toLocaleString() });
-      posts = posts.slice(0, 50);
-      try {
-        localStorage.setItem("hellokin-posts", JSON.stringify(posts));
-        message.textContent = "Post saved on this device.";
-      } catch {
-        message.textContent = "Could not save the post on this device.";
+
+      if (!window.hkChat?.publishPost) {
+        message.textContent = "Hellokin is still connecting. Please try again.";
+        return;
       }
-      textBox.value = "";
-      renderPosts();
-    });
+
+      button.disabled = true;
+      message.textContent = "Publishing your post...";
+
+      try {
+        const result = await window.hkChat.publishPost({
+          text,
+          mediaFile: selectedMedia,
+          musicFile: selectedMusic
+        });
+
+        textBox.value = "";
+        selectedMedia = null;
+        selectedMusic = null;
+        mediaInput.value = "";
+        musicInput.value = "";
+        document.getElementById("postMediaName").textContent = "";
+        document.getElementById("postMusicName").textContent = "";
+
+        message.textContent = result.storyError
+          ? "Post shared, but Story creation failed: " + result.storyError
+          : "Your post was shared successfully!";
+      } catch (error) {
+        message.textContent = error.message || "Could not publish your post.";
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    document.getElementById("postButton").addEventListener("click", sharePost);
+
+    function startPosts() {
+      if (stopPosts || !window.hkChat?.watchPosts) return;
+
+      try {
+        stopPosts = window.hkChat.watchPosts((posts, error) => {
+          if (error) {
+            message.textContent = "Could not load posts: " + error.message;
+            return;
+          }
+          renderPosts(posts || []);
+        });
+      } catch (error) {
+        message.textContent = error.message || "Posts are not available yet.";
+      }
+    }
+
+    window.addEventListener("hellokin-profile", startPosts);
+    startPosts();
 
     document.getElementById("peopleInfo").addEventListener("click", () => {
       document.getElementById("peopleMessage").textContent =
         "Friend discovery and requests still need to be connected to Firebase.";
     });
+</script>
 
-    renderPosts();
-  </script>
-
-  <script type="module" src="./chat.js?v=welcome1"></script>
+  <script type="module" src="./chat.js?v=sharedposts1"></script>
   <script>
  function showScreen(screenId) {
   const groups = {
