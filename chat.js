@@ -14,7 +14,7 @@ const st = document.createElement('style');
 st.textContent = '#chatDlg .msgs{height:46vh;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:4px 0}#chatDlg .m{max-width:80%;padding:8px 12px;border-radius:14px;background:var(--soft);overflow-wrap:anywhere;font-size:15px}#chatDlg .m.me{align-self:flex-end;background:var(--btn);color:var(--btnink)}#chatDlg .crow{display:flex;gap:8px;margin-top:10px}#chatDlg .crow input{flex:1}#chatDlg .li{width:100%;justify-content:flex-start;margin-top:8px;border-radius:14px}';
 st.textContent += "\n/* HELL0KIN CHAT REDESIGN */\n#chatDlg .msgs {\n  background:\n    radial-gradient(circle at 15% 20%, #dceeff 0, transparent 34%),\n    radial-gradient(circle at 85% 75%, #fce7f3 0, transparent 32%),\n    #f3f6fc;\n  background-attachment: local;\n  padding: 12px;\n  border-radius: 16px;\n}\n#chatDlg .m {\n  max-width: 80%;\n  width: fit-content;\n  padding: 10px 13px;\n  border-radius: 16px 16px 16px 5px;\n  background: #ffffff;\n  color: #18243a;\n  box-shadow: 0 2px 6px #15233a12;\n  overflow-wrap: anywhere;\n}\n#chatDlg .m.me {\n  align-self: flex-end;\n  border-radius: 16px 16px 5px 16px;\n  background: #d7f8df;\n  color: #123b27;\n}\n#chatDlg .m img,\n#chatDlg .m video {\n  display: block;\n  border-radius: 12px;\n}\n#chatDlg .li {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n#chatDlg .letter-avatar {\n  display: inline-flex;\n  width: 42px;\n  height: 42px;\n  min-width: 42px;\n  align-items: center;\n  justify-content: center;\n  border-radius: 50%;\n  background: #dce8ff;\n  color: #203b75;\n  font-weight: 700;\n  text-transform: uppercase;\n}\n";
 
-st.textContent += "\n/* FULLSCREEN HELL0KIN CHAT */\n#chatDlg {\n  box-sizing: border-box;\n  position: fixed;\n  inset: 0;\n  width: 100%;\n  max-width: none;\n  height: 100%;\n  height: 100dvh;\n  max-height: none;\n  margin: 0;\n  padding: max(12px, env(safe-area-inset-top))\n           14px\n           max(12px, env(safe-area-inset-bottom));\n  border: 0;\n  border-radius: 0;\n  overflow: hidden;\n  background: var(--card, white);\n  color: var(--ink, #14213d);\n}\n#chatDlg[open] {\n  display: flex;\n  flex-direction: column;\n}\n#chatDlg > h2 {\n  flex: 0 0 auto;\n}\n#chatDlg #chatBody {\n  flex: 1 1 auto;\n  min-height: 0;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n}\n#chatDlg #chatBody > .dlgacts:first-child {\n  flex: 0 0 auto;\n}\n#chatDlg .msgs {\n  flex: 1 1 auto;\n  height: auto;\n  min-height: 0;\n  max-height: none;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n#chatDlg .crow {\n  flex: 0 0 auto;\n  padding-bottom: 4px;\n}\n#chatDlg .crow input {\n  min-width: 0;\n}\n#chatDlg #chatBody > #cl {\n  flex: 1 1 auto;\n  min-height: 0;\n  overflow-y: auto;\n}\n";
+st.textContent += "\n/* FULLSCREEN HELL0KIN CHAT */\n#chatDlg {\n  box-sizing: border-box;\n  position: fixed;\n  inset: 0;\n  width: 100%;\n  max-width: none;\n  height: 100%;\n  height: 100dvh;\n  max-height: none;\n  margin: 0;\n  padding: max(12px, env(safe-area-inset-top))\n           14px\n           max(12px, env(safe-area-inset-bottom));\n  border: 0;\n  border-radius: 0;\n  overflow: hidden;\n  background: var(--card, white);\n  color: var(--ink, #14213d);\n}\n#chatDlg:not([hidden]) {\n  display: flex;\n  flex-direction: column;\n}\n#chatDlg > h2 {\n  flex: 0 0 auto;\n}\n#chatDlg #chatBody {\n  flex: 1 1 auto;\n  min-height: 0;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n}\n#chatDlg #chatBody > .dlgacts:first-child {\n  flex: 0 0 auto;\n}\n#chatDlg .msgs {\n  flex: 1 1 auto;\n  height: auto;\n  min-height: 0;\n  max-height: none;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n#chatDlg .crow {\n  flex: 0 0 auto;\n  padding-bottom: 4px;\n}\n#chatDlg .crow input {\n  min-width: 0;\n}\n#chatDlg #chatBody > #cl {\n  flex: 1 1 auto;\n  min-height: 0;\n  overflow-y: auto;\n}\n";
 st.textContent += '\n#chatDlg .pwrow{display:flex;align-items:center;gap:8px}\n#chatDlg .pwrow input{flex:1;min-width:0}\n#chatDlg .pw-toggle{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:42px}\n#chatDlg .pw-toggle svg{display:block}\n';
 document.head.append(st);
 
@@ -109,7 +109,7 @@ body.addEventListener('click', async e => {
     }
     if (a === 'camera') { $('cameraFile')?.click(); return; }
     if (a === 'file') { $('attachFile')?.click(); return; }
-    if (a === 'close') { stop(); dlg.close(); }
+    if (a === 'close') { stop(); dlg.hidden = true; }
     else if (a === 'back') { stop(); chatList(); }
     else if (a === 'signin') { show(); }
     else if (a === 'toggle-password') {
@@ -273,11 +273,84 @@ if (ok) {
         detail: {username: me.username, photoURL: me.photoURL}
       }));
     }
-    if (dlg.open) show();
+    if (!dlg.hidden) show();
   });
 }
 window.hkChat = {
-  open() { if (!dlg.open) dlg.showModal(); show(); },
+  open() { dlg.hidden = false; show(); },
+  watchStories(onChange) {
+    if (!db || !auth?.currentUser) {
+      throw new Error("Sign in to view Stories.");
+    }
+
+    return onSnapshot(
+      query(collection(db, "stories"), orderBy("createdAt", "desc")),
+      snapshot => {
+        const now = Date.now();
+        const stories = snapshot.docs
+          .map(d => ({id: d.id, ...d.data()}))
+          .filter(story => Number(story.expiresAt) > now);
+
+        onChange(stories, null);
+      },
+      error => onChange([], error)
+    );
+  },
+
+  async uploadStory(file) {
+    if (!me || !auth?.currentUser) {
+      throw new Error("Sign in before sharing a Story.");
+    }
+
+    if (!file || (!file.type.startsWith("image/") &&
+                  !file.type.startsWith("video/"))) {
+      throw new Error("Choose a photo or video.");
+    }
+
+    const isVideo = file.type.startsWith("video/");
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      throw new Error(isVideo
+        ? "Choose a video smaller than 50 MB."
+        : "Choose an image smaller than 10 MB.");
+    }
+
+    if (!cloudinary.cloudName || !cloudinary.uploadPreset) {
+      throw new Error("Cloudinary settings are incomplete.");
+    }
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("upload_preset", cloudinary.uploadPreset);
+
+    const response = await fetch(
+      "https://api.cloudinary.com/v1_1/" +
+        cloudinary.cloudName + "/auto/upload",
+      {method: "POST", body: form}
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.secure_url) {
+      throw new Error(result.error?.message || "Story upload failed.");
+    }
+
+    const createdAt = Date.now();
+
+    const story = {
+      uid: me.uid,
+      username: me.username || "Hellokin member",
+      mediaURL: result.secure_url,
+      mediaType: isVideo ? "video" : "image",
+      createdAt,
+      expiresAt: createdAt + 24 * 60 * 60 * 1000
+    };
+
+    await addDoc(collection(db, "stories"), story);
+    return story;
+  },
+
   async signOut() { if (auth) await signOut(auth); },
   async saveProfilePicture(file) {
     if (!me || !auth?.currentUser) throw new Error('Sign in to Chat first.');
@@ -311,11 +384,11 @@ window.hkChat = {
   },
   changeUsername() {
     if (!me) {
-      if (!dlg.open) dlg.showModal();
+      dlg.hidden = false;
       show();
       return;
     }
-    if (!dlg.open) dlg.showModal();
+    dlg.hidden = false;
     view(top('Change username', 1) +
       '<label>New username (letters, numbers, _)</label>' +
       '<input id="cU" autocapitalize="none" maxlength="20" value="' + esc(me.username || '') + '">' +

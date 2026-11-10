@@ -16,7 +16,7 @@
       "purpose": "any"
     },
     {
-      "src": "./hellokin-icons/icons/icon-512.png",
+      "src": "./hellokin-icons/icons/hellokin-app-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

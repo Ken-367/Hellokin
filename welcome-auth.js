@@ -104,6 +104,7 @@ if (welcome) {
     welcome.hidden = true;
     appParts.forEach(el => el.hidden = false);
     if (typeof window.showScreen === "function") window.showScreen("home");
+
   };
 
   function render(message = "") {
